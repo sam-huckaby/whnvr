@@ -21,12 +21,12 @@ let css_handler =
 *)
 
 let mytitle = title ( txt "Hello World" )
-let mycontent = div ~a:[a_class ["container bg-red-600"]] [
-  h1 [txt "The Page Title" ] ;
-  div ~a:[a_class ["child-content"]] [
+let mycontent = div ~a:[a_class ["w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8"]] [
+  h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "The Page Title" ] ;
+  div ~a:[a_class ["bg-orange-600/50" ; "p-4"]] [
     txt "This is the first child" ;
   ] ;
-  div ~a:[a_class ["child-content"]] [
+  div ~a:[a_class ["bg-orange-600/50" ; "p-4"]] [
     txt "This is the second child" ;
   ] ;
 ]
@@ -42,7 +42,7 @@ let mypage =
         script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "");
       ]
     )
-    (body [mycontent])
+    (body ~a:[a_class ["bg-gray-800" ; "text-neutral-100"]] [mycontent])
 
 let s = Format.asprintf "%a" (Html.pp ()) mypage
 (*
