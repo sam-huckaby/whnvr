@@ -1,5 +1,5 @@
 (executable
  (public_name whnvr)
  (name main)
- (libraries dream whnvr)
+ (libraries dream tyxml whnvr)
  (preprocess (pps lwt_ppx)))
