@@ -1,5 +1,5 @@
 (executable
  (public_name whnvr)
  (name main)
- (libraries dream tyxml whnvr)
+ (libraries caqti-driver-postgresql dream tyxml whnvr)
  (preprocess (pps lwt_ppx)))

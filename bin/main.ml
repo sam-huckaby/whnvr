@@ -13,6 +13,9 @@ open Tyxml_html
 (* Initialize Random *)
 let _ = Random.self_init ()
 
+module type DB = Caqti_lwt.CONNECTION
+module T = Caqti_type
+
 (*let homePage = "<h1 class='p-16 text-red'>Dynamic Page Construction</h1>"
 let contactPage = "<h1>DYNAMIC CONTACT!</h1>"*)
 (*
@@ -22,6 +25,15 @@ let css_handler =
     ~headers:["Content-Type", "text/css"]
     css
 *)
+
+let list_posts =
+  let query =
+    let open Caqti_request.Infix in
+    (T.unit ->* T.(tup2 int string))
+    "SELECT id, message FROM posts" in
+  fun (module Db : DB) ->
+    let%lwt comments_or_error = Db.collect_list query () in
+    Caqti_lwt.or_fail comments_or_error
 
 (* Type safety? What's that? *)
 let a_hx name = Tyxml.Html.Unsafe.space_sep_attrib ("hx-" ^ name)
@@ -81,28 +93,48 @@ let mypage =
 
 let compile_html html_obj = Format.asprintf "%a" (Html.pp ()) html_obj
 let elt_to_string elt = Fmt.str "%a" (Tyxml.Html.pp_elt ()) elt
-(*
-  let build_root view =
-    let template = "
-    <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Ocaml & Htmx</title>
-          <script src='https://unpkg.com/htmx.org/dist/htmx.min.js'></script>
-          <script src='https://cdn.tailwindcss.com'></script>
-          <link rel='stylesheet' type='text/css' href='/styles/global.css' />
-        </head>
-        <body>
-        " ^ view ^ "
-        </body>
-      </html>" in
-    Dream.respond
-      ~headers:["Content-Type", "text/html"]
-      template;;
-*)
+
+let render comments =
+  html
+    (
+      head mytitle [
+        (*link ~rel:[`Stylesheet] ~href:"/styles/global.css" ();*)
+        script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/htmx.org/dist/htmx.min.js")] (txt "");
+        script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "");
+      ]
+    )
+    (body ~a:[a_class ["bg-gray-800" ; "text-neutral-100" ; "p-8"]] [
+      div ~a:[a_class ["flex flex-col items-center gap-4"]] (
+        comments |> List.map (
+          fun (_id, message) -> 
+            div ~a:[a_class ["p-4 bg-white rounded-lg overflow-hidden shadow-md w-[500px]"]] [
+              div ~a:[a_class ["p-4"]] [
+                div ~a:[a_class ["flex items-center"]] [
+                  div ~a:[a_class ["flex-shrink-0"]] [
+                    div ~a:[a_class ["h-12 w-12 rounded-full bg-orange-600"]] []
+                  ] ;
+                  div ~a:[a_class ["ml-4"]] [
+                    h2 ~a:[a_class ["text-lg font-semibold text-gray-900"]] [txt "John Doe"] ;
+                    p ~a:[a_class ["text-sm font-medium text-gray-500"]] [txt "@johndoe"]
+                  ]
+                ] ;
+                div ~a:[a_class ["mt-4"]] [
+                  p ~a:[a_class ["text-gray-800 text-base"]] [txt message] ;
+                  div ~a:[a_class ["mt-4"]] [
+                    span ~a:[a_class ["text-gray-500 text-xs uppercase"]] [txt "4 hours ago"]
+                  ]
+                ]
+              ] ;
+            ]
+        )
+      )
+    ])
+
 let () =
   Dream.run ~interface:"0.0.0.0"
   @@ Dream.logger
+  @@ Dream.sql_pool "postgresql://dream:password@localhost:5432/whnvr"
+  @@ Dream.sql_sessions
   @@ Dream.router [
     Dream.get "/home" (fun _ ->
       Dream.html (compile_html mypage)
@@ -111,6 +143,9 @@ let () =
     Dream.get "/colorize" (fun _ ->
       Dream.html (elt_to_string (create_fancy_div ()))
     );
+    Dream.get "/posts" (fun request ->
+      let%lwt comments = Dream.sql request list_posts in
+      Dream.html (compile_html (render comments)));
 
     (*Dream.get "/styles/global.css" (fun _ ->
       css_handler
