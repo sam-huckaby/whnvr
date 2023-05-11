@@ -16,21 +16,11 @@ let _ = Random.self_init ()
 module type DB = Caqti_lwt.CONNECTION
 module T = Caqti_type
 
-(*let homePage = "<h1 class='p-16 text-red'>Dynamic Page Construction</h1>"
-let contactPage = "<h1>DYNAMIC CONTACT!</h1>"*)
-(*
-let css_handler =
-  let css = "body { background-color: blue; }" in
-  Dream.response
-    ~headers:["Content-Type", "text/css"]
-    css
-*)
-
 let list_posts =
   let query =
     let open Caqti_request.Infix in
-    (T.unit ->* T.(tup2 int string))
-    "SELECT id, message FROM posts" in
+    (T.unit ->* T.(tup4 string string string string))
+    "SELECT posts.message, users.username, users.display_name, to_char(posts.created, 'MM-DD-YYYY @ HH:MI') AS created FROM posts JOIN users ON posts.user_id = users.id" in
   fun (module Db : DB) ->
     let%lwt comments_or_error = Db.collect_list query () in
     Caqti_lwt.or_fail comments_or_error
@@ -106,7 +96,7 @@ let render comments =
     (body ~a:[a_class ["bg-gray-800" ; "text-neutral-100" ; "p-8"]] [
       div ~a:[a_class ["flex flex-col items-center gap-4"]] (
         comments |> List.map (
-          fun (_id, message) -> 
+          fun (message, username, display_name, created) -> 
             div ~a:[a_class ["p-4 bg-white rounded-lg overflow-hidden shadow-md w-[500px]"]] [
               div ~a:[a_class ["p-4"]] [
                 div ~a:[a_class ["flex items-center"]] [
@@ -114,14 +104,14 @@ let render comments =
                     div ~a:[a_class ["h-12 w-12 rounded-full bg-orange-600"]] []
                   ] ;
                   div ~a:[a_class ["ml-4"]] [
-                    h2 ~a:[a_class ["text-lg font-semibold text-gray-900"]] [txt "John Doe"] ;
-                    p ~a:[a_class ["text-sm font-medium text-gray-500"]] [txt "@johndoe"]
+                    h2 ~a:[a_class ["text-lg font-semibold text-gray-900"]] [txt display_name] ;
+                    p ~a:[a_class ["text-sm font-medium text-gray-500"]] [txt ("@" ^ username)]
                   ]
                 ] ;
                 div ~a:[a_class ["mt-4"]] [
                   p ~a:[a_class ["text-gray-800 text-base"]] [txt message] ;
                   div ~a:[a_class ["mt-4"]] [
-                    span ~a:[a_class ["text-gray-500 text-xs uppercase"]] [txt "4 hours ago"]
+                    span ~a:[a_class ["text-gray-500 text-xs uppercase"]] [txt created]
                   ]
                 ]
               ] ;
