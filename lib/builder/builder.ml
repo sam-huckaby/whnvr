@@ -7,6 +7,7 @@ open Tyxml
 open Tyxml_html
 
 let compile_html html_obj = Format.asprintf "%a" (Html.pp ()) html_obj
+let compile_elt elt = Format.asprintf "%a" (Tyxml.Html.pp_elt ()) elt
 
 (* Type safety? What's that? *)
 let a_hx name = Tyxml.Html.Unsafe.space_sep_attrib ("hx-" ^ name)
@@ -82,3 +83,14 @@ let list_posts posts =
         )
       )
 
+(* Probably gonna delete this, it was just a nice template to check things early on *)
+let mycontent = div ~a:[a_class ["bg-orange-600/50" ; "rounded" ; "w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8"]] [
+  h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "The Page Title" ] ;
+  div ~a:[a_class ["p-4"]] [
+    txt "This is the first child" ;
+  ] ;
+  div ~a:[a_class ["p-4"]] [
+    txt "This is the second child" ;
+  ] ;
+  (create_fancy_div ()) ;
+]
