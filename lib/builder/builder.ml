@@ -9,6 +9,53 @@ open Tyxml_html
 let compile_html html_obj = Format.asprintf "%a" (Html.pp ()) html_obj
 let compile_elt elt = Format.asprintf "%a" (Tyxml.Html.pp_elt ()) elt
 
+type hx_attr = Boost | Get | Post | On | PushUrl | Select | SelectOob | Swap | SwapOob | Target | Trigger | Vals | Confirm | Delete | Disable | Disinherit | Encoding | Ext | Headers | History | HistoryElt | Include | Indicator | Params | Patch | Preserve | Prompt | Put | ReplaceUrl | Request | Sse | Sync | Validate | Vars | Ws
+
+let hx_to_string = function
+  | Boost -> "hx-boost" (* Bool *)
+  | Get -> "hx-get" (* uri *)
+  | Post -> "hx-post" (* uri *)
+  | On -> "hx-on" (* EventName (JS or htmx): javascript function *)
+  | PushUrl -> "hx-push-url" (* true | false | uri *)
+  | Select -> "hx-select" (* CSS Selector *)
+  | SelectOob -> "hx-select-oob" (* CSS Selector *)
+  | Swap -> "hx-swap" (* complicated -- https://htmx.org/attributes/hx-swap/ *)
+  | SwapOob -> "hx-swap-oob" (* complicated -- https://htmx.org/attributes/hx-swap-oob/ *)
+  | Target -> "hx-target" (* this | augmented CSS Selector *)
+  | Trigger -> "hx-trigger" (* complicated -- https://htmx.org/attributes/hx-trigger/ *)
+  | Vals -> "hx-vals" (* complicated -- https://htmx.org/attributes/hx-vals/ *)
+  | Confirm -> "hx-confirm"
+  | Delete -> "hx-delete"
+  | Disable -> "hx-disable"
+  | Disinherit -> "hx-disinherit"
+  | Encoding -> "hx-encoding"
+  | Ext -> "hx-ext"
+  | Headers -> "hx-headers"
+  | History -> "hx-history"
+  | HistoryElt -> "hx-history-elt"
+  | Include -> "hx-include"
+  | Indicator -> "hx-indicator"
+  | Params -> "hx-params"
+  | Patch -> "hx-patch"
+  | Preserve -> "hx-preserve"
+  | Prompt -> "hx-prompt"
+  | Put -> "hx-put"
+  | ReplaceUrl -> "hx-replace-url"
+  | Request -> "hx-request"
+  | Sse -> "hx-sse"
+  | Sync -> "hx-sync"
+  | Validate -> "hx-validate"
+  | Vars -> "hx-vars"
+  | Ws -> "hx-ws"
+
+let a_hx_typed name =
+  match name with
+  (*
+  | Get | Post -> Tyxml.Html.Unsafe.space_sep_attrib (hx_to_string name)
+  | Boost | On | PushUrl | Select | SelectOob | Swap -> Tyxml.Html.Unsafe.space_sep_attrib ("long-" ^ (hx_to_string name))
+  *)
+  | _ -> Tyxml.Html.Unsafe.space_sep_attrib (hx_to_string name)
+
 (* Type safety? What's that? *)
 let a_hx name = Tyxml.Html.Unsafe.space_sep_attrib ("hx-" ^ name)
 
@@ -50,6 +97,7 @@ let create_fancy_div () =
     a_hx "get" ["/colorize"] ;
     a_hx "swap" ["outerHTML"] ;
     a_hx "trigger" ["every 1s"] ;
+    a_hx_typed Target ["this"]
   ] [txt "This is a FANCY div"]
 
 let list_posts posts =
@@ -95,6 +143,7 @@ let mycontent = div ~a:[a_class ["bg-orange-600/50" ; "rounded" ; "w-full" ; "h-
   (create_fancy_div ()) ;
 ]
 
+
 (*
 Allowable htmx properties:
 [
@@ -121,7 +170,6 @@ Allowable htmx properties:
     "hx-history-elt",
     "hx-include",
     "hx-indicator",
-    "htmx-request",
     "hx-params",
     "hx-patch",
     "hx-preserve",
@@ -137,6 +185,7 @@ Allowable htmx properties:
 
 
 
+    "htmx-request",
     "htmx-added",
     "htmx-indicator",
     "htmx-settling",
