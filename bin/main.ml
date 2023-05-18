@@ -9,9 +9,6 @@
  *)
 open Tyxml_html
 
-(* Initialize Random *)
-let _ = Random.self_init ()
-
 module type DB = Caqti_lwt.CONNECTION
 module T = Caqti_type
 

@@ -3,8 +3,23 @@ An HTMX builder that constructions components for use
 in various parts of the WHNVR app.
 *)
 
+(*
+  Ultimately, I want a structure that looks kind of like:
+    User requests route /posts
+    main calls handler for posts
+    PostHandler uses Builder to build posts page with default layout
+    Builder:
+      generates standard HTML page wrapper
+      Loads default layout and injects it into the page
+      Loads the posts page into the layout
+    router then hands the page back to the user
+ *)
+
 open Tyxml
 open Tyxml_html
+
+(* Initialize Random *)
+let _ = Random.self_init ()
 
 let compile_html html_obj = Format.asprintf "%a" (Html.pp ()) html_obj
 let compile_elt elt = Format.asprintf "%a" (Tyxml.Html.pp_elt ()) elt
