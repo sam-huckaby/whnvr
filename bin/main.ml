@@ -33,13 +33,19 @@ let () =
       Dream.html (Builder.compile_html (Builder.wrap_page (title (txt "Home Base")) (Builder.list_posts posts)))
     ); 
 
-    Dream.get "/colorize" (fun _ ->
-      Dream.html (Builder.compile_elt (Builder.create_fancy_div ()))
+    (* Handler mathodology - use a handler and a type to generate pages at the root *)
+    Dream.get "hello" (fun _ ->
+      Dream.html (Handler.generate_page Hello)
     );
 
     Dream.get "/posts" (fun request ->
       let%lwt posts = Dream.sql request list_posts in
-      Dream.html (Builder.compile_elt (Builder.list_posts posts)));
+      Dream.html (Builder.compile_elt (Builder.list_posts posts))
+    );
+
+    Dream.get "/colorize" (fun _ ->
+      Dream.html (Builder.compile_elt (Builder.create_fancy_div ()))
+    );
 
     (*Dream.get "/styles/global.css" (fun _ ->
       css_handler

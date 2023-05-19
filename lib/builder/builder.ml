@@ -158,8 +158,40 @@ let mycontent = div ~a:[a_class ["bg-orange-600/50" ; "rounded" ; "w-full" ; "h-
   (create_fancy_div ()) ;
 ]
 
+(*
+These are the generic html constructors that handler will leverage when it builds specific pages
+ *)
+let html_wrapper title content =
+  html
+    (head title [
+        script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/htmx.org/dist/htmx.min.js")] (txt "");
+        script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "");
+    ])
+    (body [content])
 
 (*
+  This is a content page template
+  TODO: Modify this to be a header with a centered column with spacing on either side
+ *)
+let content_template content =
+  div [
+    h1 [txt "Hello, Dream!"];
+    div [content]
+  ]
+
+(*
+  This is a template for posts which load "infinitely"
+  TODO: Modify this to be three columns with no top header, the main content loaded in the center column
+ *)
+let infinite_template content =
+  div [
+    h1 [txt "Hello, Dream!"];
+    div ~a:[a_class ["infinite"]] [content]
+  ]
+
+
+(*
+Not sure why I want all these yet... But I do.
 Allowable htmx properties:
 [
     "hx-boost",
