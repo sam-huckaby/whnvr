@@ -1,8 +1,8 @@
-(* Kepp all the database logic in here *)
-
+(* Keep all the database logic in here *)
 module type DB = Caqti_lwt.CONNECTION
 module T = Caqti_type
 
+(* This is a very SIMPLY database query. Needs to be wrapped in something, so it can be standardized *)
 let list_posts =
   let query =
     let open Caqti_request.Infix in

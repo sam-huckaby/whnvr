@@ -3,18 +3,6 @@ An HTMX builder that constructions components for use
 in various parts of the WHNVR app.
 *)
 
-(*
-  Ultimately, I want a structure that looks kind of like:
-    User requests route /posts
-    main calls handler for posts
-    PostHandler uses Builder to build posts page with default layout
-    Builder:
-      generates standard HTML page wrapper
-      Loads default layout and injects it into the page
-      Loads the posts page into the layout
-    router then hands the page back to the user
- *)
-
 open Tyxml
 open Tyxml_html
 
@@ -155,23 +143,24 @@ let list_posts posts =
 (* The scripts loaded here need to be moved into the stack and have cache control configured *)
 (* so that they aren't being loaded on every page refresh.                                   *)
 (* @param {string} title - The page title that will be applied to the HTML document          *)
-(* @param {string} content - The content for the page, should already have a layout applied  *)
+(* @param {[< html_types.flow5 ] elt} content - The content for the page, layout pre-applied *)
 (*********************************************************************************************)
-(*
-  These are the generic html constructors that handler will leverage when it builds specific pages
-  The html_wrapper is intended to be passed a layout-wrapped content block.
- *)
-let html_wrapper title content =
+let html_wrapper page_title content =
   html 
-    (head title [
+    (head (title (txt page_title)) [
         script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/htmx.org/dist/htmx.min.js")] (txt "");
         script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "");
     ])
     (body [content])
 
-(*
-  This is a content page template with a large centered-text header
- *)
+(*********************************************************************************************)
+(*                                    content_template                                       *)
+(* This is the layout to be used with a standard content page. It features a large upper div *)
+(* that is sometimes called a "jumbotron" in other systems. Anything can go here, but        *)
+(* normally it's like a line of text and a background picture or something.                  *)
+(* @param {[< html_types.flow5 ] elt} header - The element that will be displayed at the top *)
+(* @param {[< html_types.flow5 ] elt} content - The content for the page,                    *)
+(*********************************************************************************************)
 let content_template header content =
   div ~a:[a_class ["flex flex-col"]] [
     div ~a:[a_class ["flex justify-center items-center h-32"]] [header] ;
@@ -182,9 +171,17 @@ let content_template header content =
     ]
   ]
 
-(*
-  This is a template for posts which load "infinitely"
- *)
+(*********************************************************************************************)
+(*                                    infinite_template                                      *)
+(* This is the layout to be used with a standard content page. It features a large upper div *)
+(* that is sometimes called a "jumbotron" in other systems. Anything can go here, but        *)
+(* normally it's like a line of text and a background picture or something.                  *)
+(* @param {[< html_types.flow5 ] elt} left_content - The content shown in the left pane,     *)
+(*                                                   usually a nav or something.             *)
+(* @param {[< html_types.flow5 ] elt} middle_content - The main page content                 *)
+(* @param {[< html_types.flow5 ] elt} right_content - The content shown in the right pane,   *)
+(*                                                    which is usually... something.         *)
+(*********************************************************************************************)
 let infinite_template left_content middle_content right_content =
   div ~a:[a_class ["flex flex-row"]] [
     div ~a:[a_class ["flex flex-col"]] [left_content] ;
