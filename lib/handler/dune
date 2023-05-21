@@ -1,3 +1,5 @@
 (library
   (name handler)
-  (libraries builder tyxml))
+  (libraries dream builder database tyxml)
+  (preprocess (pps lwt_ppx))
+ )

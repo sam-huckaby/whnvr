@@ -9,18 +9,6 @@
  *)
 open Tyxml_html
 
-module type DB = Caqti_lwt.CONNECTION
-module T = Caqti_type
-
-let list_posts =
-  let query =
-    let open Caqti_request.Infix in
-    (T.unit ->* T.(tup4 string string string string))
-    "SELECT posts.message, users.username, users.display_name, to_char(posts.created, 'MM-DD-YYYY @ HH:MI') AS created FROM posts JOIN users ON posts.user_id = users.id" in
-  fun (module Db : DB) ->
-    let%lwt posts_or_error = Db.collect_list query () in
-    Caqti_lwt.or_fail posts_or_error
-
 let () =
   Dream.run ~interface:"0.0.0.0"
   @@ Dream.logger
@@ -29,20 +17,24 @@ let () =
   @@ Dream.sql_sessions
   @@ Dream.router [
     Dream.get "/home" (fun request ->
-      let%lwt posts = Dream.sql request list_posts in
+      let%lwt posts = Dream.sql request Database.list_posts in
       Dream.html (Builder.compile_html (Builder.wrap_page (title (txt "Home Base")) (Builder.list_posts posts)))
     ); 
 
     (* Handler mathodology - use a handler and a type to generate pages at the root *)
-    Dream.get "hello" (fun _ ->
-      Dream.html (Handler.generate_page Hello)
+    Dream.get "hello" (fun request ->
+      Dream.html (Handler.generate_page Hello request)
     );
 
     Dream.get "/posts" (fun request ->
-      let%lwt posts = Dream.sql request list_posts in
+      Dream.html (Handler.generate_page Posts request)
+    );
+(*
+    Dream.get "/posts" (fun request ->
+      let%lwt posts = Dream.sql request Database.list_posts in
       Dream.html (Builder.compile_elt (Builder.list_posts posts))
     );
-
+*)
     Dream.get "/colorize" (fun _ ->
       Dream.html (Builder.compile_elt (Builder.create_fancy_div ()))
     );

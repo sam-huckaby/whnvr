@@ -159,10 +159,11 @@ let mycontent = div ~a:[a_class ["bg-orange-600/50" ; "rounded" ; "w-full" ; "h-
 ]
 
 (*
-These are the generic html constructors that handler will leverage when it builds specific pages
+  These are the generic html constructors that handler will leverage when it builds specific pages
+  The html_wrapper is intended to be passed a layout-wrapped content block.
  *)
 let html_wrapper title content =
-  html
+  html 
     (head title [
         script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/htmx.org/dist/htmx.min.js")] (txt "");
         script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "");
@@ -170,23 +171,26 @@ let html_wrapper title content =
     (body [content])
 
 (*
-  This is a content page template
-  TODO: Modify this to be a header with a centered column with spacing on either side
+  This is a content page template with a large centered-text header
  *)
-let content_template content =
-  div [
-    h1 [txt "Hello, Dream!"];
-    div [content]
+let content_template header content =
+  div ~a:[a_class ["flex flex-col"]] [
+    div ~a:[a_class ["flex justify-center items-center h-32"]] [header] ;
+    div ~a:[a_class ["flex flex-row grow"]] [
+      div ~a:[a_class ["sm:w-[10%]"]] [] ;
+      div ~a:[a_class ["bg-red-600 grow"]] [content] ;
+      div ~a:[a_class ["sm:w-[10%]"]] [] ;
+    ]
   ]
 
 (*
   This is a template for posts which load "infinitely"
-  TODO: Modify this to be three columns with no top header, the main content loaded in the center column
  *)
-let infinite_template content =
-  div [
-    h1 [txt "Hello, Dream!"];
-    div ~a:[a_class ["infinite"]] [content]
+let infinite_template left_content middle_content right_content =
+  div ~a:[a_class ["flex flex-row"]] [
+    div ~a:[a_class ["flex flex-col"]] [left_content] ;
+    div ~a:[a_class ["flex flex-col"]] [middle_content] ;
+    div ~a:[a_class ["flex flex-col"]] [right_content] ;
   ]
 
 
