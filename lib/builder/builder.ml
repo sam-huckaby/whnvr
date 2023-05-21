@@ -18,9 +18,6 @@ in various parts of the WHNVR app.
 open Tyxml
 open Tyxml_html
 
-(* Initialize Random *)
-let _ = Random.self_init ()
-
 let compile_html html_obj = Format.asprintf "%a" (Html.pp ()) html_obj
 let compile_elt elt = Format.asprintf "%a" (Tyxml.Html.pp_elt ()) elt
 
@@ -74,16 +71,14 @@ let a_hx_typed name =
 (* Type safety? What's that? *)
 let a_hx name = Tyxml.Html.Unsafe.space_sep_attrib ("hx-" ^ name)
 
-let wrap_page title content =
-  html
-    (
-      head title [
-        (*link ~rel:[`Stylesheet] ~href:"/styles/global.css" ();*)
-        script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/htmx.org/dist/htmx.min.js")] (txt "");
-        script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "");
-      ]
-    )
-    (body ~a:[a_class ["bg-gray-800" ; "text-neutral-100" ; "p-8"]] [content])
+(*********************************************************************************************)
+(*                                        Fancy Div                                          *)
+(* The Fancy Div is a proof of concept, that uses htmx to generate the same div with         *)
+(* different background colors and a transition style to dynamically change the backgound    *)
+(* every second. This is cool, but it just uses HTTP requests and is pretty inefficient      *)
+(*********************************************************************************************)
+(* Initialize Random *)
+let _ = Random.self_init ()
 
 let create_fancy_div () =
   let colors = [| 
@@ -115,6 +110,13 @@ let create_fancy_div () =
     a_hx_typed Target ["this"]
   ] [txt "This is a FANCY div"]
 
+
+(*********************************************************************************************)
+(*                                        list_posts                                         *)
+(* This takes a list of posts that have been retrieved from the database and formats them to *)
+(* look like standard social media tiles using TailwindCSS and the magic of friendship.      *)
+(*********************************************************************************************)
+(* I need to modify this to assign id attributes to everything, so that the screen doesn't flicker *)
 let list_posts posts =
       div ~a:[
         a_class ["flex flex-col items-center gap-4"] ;
@@ -146,18 +148,15 @@ let list_posts posts =
         )
       )
 
-(* Probably gonna delete this, it was just a nice template to check things early on *)
-let mycontent = div ~a:[a_class ["bg-orange-600/50" ; "rounded" ; "w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8"]] [
-  h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "The Page Title" ] ;
-  div ~a:[a_class ["p-4"]] [
-    txt "This is the first child" ;
-  ] ;
-  div ~a:[a_class ["p-4"]] [
-    txt "This is the second child" ;
-  ] ;
-  (create_fancy_div ()) ;
-]
-
+(*********************************************************************************************)
+(*                                      html_wrapper                                         *)
+(* This is the main page wrapping function. Every page will go through this function so that *)
+(* it gets the necessary 3rd party scripts and styles that are used site-wide. Ultimately    *)
+(* The scripts loaded here need to be moved into the stack and have cache control configured *)
+(* so that they aren't being loaded on every page refresh.                                   *)
+(* @param {string} title - The page title that will be applied to the HTML document          *)
+(* @param {string} content - The content for the page, should already have a layout applied  *)
+(*********************************************************************************************)
 (*
   These are the generic html constructors that handler will leverage when it builds specific pages
   The html_wrapper is intended to be passed a layout-wrapped content block.
@@ -189,7 +188,7 @@ let content_template header content =
 let infinite_template left_content middle_content right_content =
   div ~a:[a_class ["flex flex-row"]] [
     div ~a:[a_class ["flex flex-col"]] [left_content] ;
-    div ~a:[a_class ["flex flex-col"]] [middle_content] ;
+    div ~a:[a_class ["flex flex-col grow"]] [middle_content] ;
     div ~a:[a_class ["flex flex-col"]] [right_content] ;
   ]
 

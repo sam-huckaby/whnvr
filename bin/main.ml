@@ -7,8 +7,6 @@
       - Tweet button stores text content and resets form 
       - Accessible from multuple browser tabs simultaneously
  *)
-open Tyxml_html
-
 let () =
   Dream.run ~interface:"0.0.0.0"
   @@ Dream.logger
@@ -16,32 +14,25 @@ let () =
   @@ Dream.sql_pool "postgresql://dream:password@localhost:5432/whnvr"
   @@ Dream.sql_sessions
   @@ Dream.router [
-    Dream.get "/home" (fun request ->
-      let%lwt posts = Dream.sql request Database.list_posts in
-      Dream.html (Builder.compile_html (Builder.wrap_page (title (txt "Home Base")) (Builder.list_posts posts)))
-    ); 
-
     (* Handler mathodology - use a handler and a type to generate pages at the root *)
-    Dream.get "hello" (fun request ->
-      Dream.html (Handler.generate_page Hello request)
+    Dream.get "/hello" (fun request ->
+      let%lwt page = (Handler.generate_page Hello request) in
+      Dream.html page
     );
 
-    Dream.get "/posts" (fun request ->
-      Dream.html (Handler.generate_page Posts request)
+    Dream.get "/feed" (fun request ->
+      let%lwt page = (Handler.generate_page Feed request) in
+      Dream.html page
     );
-(*
+
     Dream.get "/posts" (fun request ->
       let%lwt posts = Dream.sql request Database.list_posts in
       Dream.html (Builder.compile_elt (Builder.list_posts posts))
     );
-*)
+
     Dream.get "/colorize" (fun _ ->
       Dream.html (Builder.compile_elt (Builder.create_fancy_div ()))
     );
-
-    (*Dream.get "/styles/global.css" (fun _ ->
-      css_handler
-    );*)
 
     (* Serve any static content we may need, maybe stylesheets? *)
     (* This local_directory path is relative to the location the app is run from *)
