@@ -20,12 +20,17 @@ let () =
       Dream.html page
     );
 
-    Dream.get "/feed" (fun request ->
+    Dream.get "/" (fun request ->
       let%lwt page = (Handler.generate_page Feed request) in
       Dream.html page
     );
 
     Dream.get "/posts" (fun request ->
+      let%lwt posts = Dream.sql request Database.list_posts in
+      Dream.html (Builder.compile_elt (Builder.list_posts posts))
+    );
+
+    Dream.post "/posts" (fun request ->
       let%lwt posts = Dream.sql request Database.list_posts in
       Dream.html (Builder.compile_elt (Builder.list_posts posts))
     );

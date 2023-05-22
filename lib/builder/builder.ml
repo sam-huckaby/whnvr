@@ -98,6 +98,10 @@ let create_fancy_div () =
     a_hx_typed Target ["this"]
   ] [txt "This is a FANCY div"]
 
+let button_styles =
+  ["border" ; "rounded" ; "border-gray-300" ; "hover:bg-neutral-100" ; "cursor-pointer"]
+let submit =
+    Html.[input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Submit"] () ]
 
 (*********************************************************************************************)
 (*                                        list_posts                                         *)
@@ -184,9 +188,9 @@ let content_template header content =
 (*********************************************************************************************)
 let infinite_template left_content middle_content right_content =
   div ~a:[a_class ["flex flex-row"]] [
-    div ~a:[a_class ["flex flex-col"]] [left_content] ;
-    div ~a:[a_class ["flex flex-col grow"]] [middle_content] ;
-    div ~a:[a_class ["flex flex-col"]] [right_content] ;
+    div ~a:[a_class ["flex" ; "flex-col" ; "grow"]] [left_content] ;
+    div ~a:[a_class ["flex" ; "flex-col" ; "w-[500px]"]] [middle_content] ;
+    div ~a:[a_class ["flex" ; "flex-col" ; "grow"]] [right_content] ;
   ]
 
 
