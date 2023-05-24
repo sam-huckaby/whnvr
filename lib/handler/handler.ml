@@ -17,15 +17,28 @@ let mycontent =
 let feed_page_template posts =
   div ~a:[a_class ["w-full"]] [
     div ~a:[a_class ["py-4"]] [
-      form [
-        textarea ~a:[a_class ["w-full" ; "h-[200px]" ; "border"]] (txt "") ;
-        button ~a:[
+      form ~a:[
+          Builder.a_hx_typed Post [Xml.uri_of_string "/posts"] ;
+          Builder.a_hx_typed Trigger ["submit"] ;
+          Builder.a_hx_typed Target ["#feed_container"] ;
+          Builder.a_hx_typed Swap ["innerHTML"] ;
+      ] [
+        textarea ~a:[
+          a_class ["w-full" ; "h-[200px]" ; "border"] ;
+          a_name "postMessage"
+        ] (txt "") ;
+        input ~a:[
           a_class (Builder.button_styles @ ["w-full"]) ;
-          Builder.a_hx_typed Post ["/posts"]
-        ] [txt "post"] ;
+          a_input_type `Submit ;
+          a_value "Post"
+        ] ()
       ] ;
     ] ;
-    (Builder.list_posts posts) ;
+    div ~a:[
+      a_id "feed_container"
+    ] [
+      (Builder.list_posts posts) ;
+    ]
   ]
 
 (* The hello page is basically a demo page to show off *)

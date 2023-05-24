@@ -114,7 +114,7 @@ let list_posts posts =
         a_class ["flex flex-col items-center gap-4"] ;
         a_hx "get" ["/posts"] ;
         a_hx "swap" ["outerHTML"] ;
-        a_hx "trigger" ["every 5s"] ;
+        a_hx "trigger" ["every 59s"] ;
       ] (
         posts |> List.rev_map (
           fun (message, username, display_name, created) -> 

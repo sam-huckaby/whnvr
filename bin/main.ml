@@ -7,39 +7,54 @@
       - Tweet button stores text content and resets form 
       - Accessible from multuple browser tabs simultaneously
  *)
+
+(* Am I supposed to break these out into separate files eventually? *)
+(* It does seem like these list of routes could get enormous *)
+(* Maybe there is a need to move to dynamic routes? *)
+let pages = [
+  (* Handler methodology - use a handler and a type to generate pages at the root *)
+  Dream.get "/" (fun request ->
+    let%lwt page = (Handler.generate_page Feed request) in
+    Dream.html page
+  ) ;
+
+  Dream.get "/hello" (fun request ->
+    let%lwt page = (Handler.generate_page Hello request) in
+    Dream.html page
+  ) ;
+]
+
+let fragments = [
+  Dream.get "/posts" (fun request ->
+    let%lwt posts = Dream.sql request Database.list_posts in
+    Dream.html (Builder.compile_elt (Builder.list_posts posts))
+  ) ;
+
+  Dream.get "/colorize" (fun _ ->
+    Dream.html (Builder.compile_elt (Builder.create_fancy_div ()))
+  ) ;
+]
+
+let actions = [
+  Dream.post "/posts" (fun request ->
+    let%lwt posts = Dream.sql request Database.list_posts in
+    Dream.html (Builder.compile_elt (Builder.list_posts posts))
+  );
+]
+
 let () =
   Dream.run ~interface:"0.0.0.0"
   @@ Dream.logger
   (* George, if you read this, I promise this is not a password I'm really using, please don't fire me. *)
   @@ Dream.sql_pool "postgresql://dream:password@localhost:5432/whnvr"
   @@ Dream.sql_sessions
-  @@ Dream.router [
-    (* Handler mathodology - use a handler and a type to generate pages at the root *)
-    Dream.get "/hello" (fun request ->
-      let%lwt page = (Handler.generate_page Hello request) in
-      Dream.html page
-    );
-
-    Dream.get "/" (fun request ->
-      let%lwt page = (Handler.generate_page Feed request) in
-      Dream.html page
-    );
-
-    Dream.get "/posts" (fun request ->
-      let%lwt posts = Dream.sql request Database.list_posts in
-      Dream.html (Builder.compile_elt (Builder.list_posts posts))
-    );
-
-    Dream.post "/posts" (fun request ->
-      let%lwt posts = Dream.sql request Database.list_posts in
-      Dream.html (Builder.compile_elt (Builder.list_posts posts))
-    );
-
-    Dream.get "/colorize" (fun _ ->
-      Dream.html (Builder.compile_elt (Builder.create_fancy_div ()))
-    );
-
-    (* Serve any static content we may need, maybe stylesheets? *)
-    (* This local_directory path is relative to the location the app is run from *)
-    Dream.get "/static/**" @@ Dream.static "www/static";
-  ]
+  @@ Dream.router (
+    pages @
+    fragments @
+    actions @
+    [
+      (* Serve any static content we may need, maybe stylesheets? *)
+      (* This local_directory path is relative to the location the app is run from *)
+      Dream.get "/static/**" @@ Dream.static "www/static" ;
+    ]
+  )
