@@ -20,7 +20,7 @@ let list_posts =
             users.display_name,
             to_char(posts.created, 'MM-DD-YYYY @ HH:MI') AS created
     FROM posts
-    JOIN users ON posts.user_id = users.id" in
+    INNER JOIN users ON posts.user_id = users.id" in
   fun (module Db : DB) ->
     let%lwt posts_or_error = Db.collect_list query () in
     Caqti_lwt.or_fail posts_or_error
@@ -28,12 +28,15 @@ let list_posts =
 
 let query_posts =
   [%rapper
-    get_opt
-      {sql|
-        SELECT @int{posts.id},
-               @string{posts.message},
-               @string{users.username},
-               @string{users.display_name},
-               @string{to_char(posts.created, 'MM-DD-YYYY @ HH:MI') AS created}
-      |sql}
-  ]
+      get_many
+        {sql|
+          SELECT @string{posts.id},
+                 @string{posts.message},
+                 @string{users.username},
+                 @string{users.display_name},
+                 @string{to_char(posts.created, 'MM-DD-YYYY @ HH:MI') AS created}
+          FROM posts
+          INNER JOIN users ON posts.user_id = users.id
+        |sql}
+    ]
+

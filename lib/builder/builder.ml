@@ -114,11 +114,12 @@ let list_posts posts =
         a_class ["flex flex-col items-center gap-4"] ;
         a_hx "get" ["/posts"] ;
         a_hx "swap" ["outerHTML"] ;
-        a_hx "trigger" ["every 59s"] ;
+        a_hx "trigger" ["every 5s"] ;
+        a_id "posts_container" ;
       ] (
         posts |> List.rev_map (
-          fun (message, username, display_name, created) -> 
-            div ~a:[a_class ["p-4 bg-white rounded-lg overflow-hidden shadow-md w-[500px]"]] [
+          fun (id, message, username, display_name, created) -> 
+            div ~a:[a_class ["p-4 bg-white rounded-lg overflow-hidden shadow-md w-[500px]"] ; a_id id] [
               div ~a:[a_class ["p-4"]] [
                 div ~a:[a_class ["flex items-center"]] [
                   div ~a:[a_class ["flex-shrink-0"]] [

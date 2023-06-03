@@ -24,10 +24,15 @@ let pages = [
   ) ;
 ]
 
+(* The below "fragments" are page pieces that can be hot swapped out with htmx *)
 let fragments = [
   Dream.get "/posts" (fun request ->
-    let%lwt posts = Dream.sql request Database.list_posts in
-    Dream.html (Builder.compile_elt (Builder.list_posts posts))
+    let%lwt posts = Dream.sql request (Database.query_posts ()) in
+    match posts with
+    | Ok (posts) -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
+    | _ ->
+        let%lwt page = (Handler.generate_page Hello request) in 
+        Dream.html page
   ) ;
 
   Dream.get "/colorize" (fun _ ->
@@ -37,8 +42,12 @@ let fragments = [
 
 let actions = [
   Dream.post "/posts" (fun request ->
-    let%lwt posts = Dream.sql request Database.list_posts in
-    Dream.html (Builder.compile_elt (Builder.list_posts posts))
+    let%lwt posts = Dream.sql request (Database.query_posts ()) in
+    match posts with
+    | Ok (posts) -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
+    | _ ->
+        let%lwt page = (Handler.generate_page Hello request) in 
+        Dream.html page
   );
 ]
 
