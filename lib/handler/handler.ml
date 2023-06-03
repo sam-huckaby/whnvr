@@ -51,21 +51,15 @@ let hello_page _ =
 
 (* The feed page is where the social messages will appear in this test of infinite loading *)
 let feed_page request =
-  (*let%lwt posts = Dream.sql request Database.list_posts in*)
   let%lwt posts = Dream.sql request (Database.query_posts ()) in
   match posts with
   | Ok (posts) ->
     Builder.compile_html (
       Builder.html_wrapper
         "Posts Page"
-        (Builder.infinite_template (h1 [txt "left"]) (feed_page_template posts) (h1 [txt "right"]))
+        (Builder.infinite_template (Builder.left_column ()) (feed_page_template posts) (Builder.right_column ()))
     ) |> Lwt.return
-  | _ ->
-    Builder.compile_html (
-      Builder.html_wrapper
-        "Error Page"
-        (Builder.content_template (h1 ~a:[a_class ["text-2xl"]] [txt "Oh Bugger..."]) mycontent)
-    ) |> Lwt.return
+  | _ -> Builder.error_page () |> Lwt.return
 
 (* The page types that are available, so that a non-existant page cannot be specified *)
 type page =

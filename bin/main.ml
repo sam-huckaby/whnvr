@@ -30,9 +30,7 @@ let fragments = [
     let%lwt posts = Dream.sql request (Database.query_posts ()) in
     match posts with
     | Ok (posts) -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
-    | _ ->
-        let%lwt page = (Handler.generate_page Hello request) in 
-        Dream.html page
+    | _ -> Dream.response (Builder.error_page ()) |> Lwt.return
   ) ;
 
   Dream.get "/colorize" (fun _ ->
@@ -45,9 +43,7 @@ let actions = [
     let%lwt posts = Dream.sql request (Database.query_posts ()) in
     match posts with
     | Ok (posts) -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
-    | _ ->
-        let%lwt page = (Handler.generate_page Hello request) in 
-        Dream.html page
+    | _ -> Dream.response (Builder.error_page ()) |> Lwt.return
   );
 ]
 
