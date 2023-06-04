@@ -114,7 +114,7 @@ let list_posts posts =
         a_class ["flex flex-col items-center gap-4"] ;
         a_hx "get" ["/posts"] ;
         a_hx "swap" ["outerHTML"] ;
-        a_hx "trigger" ["every 5s"] ;
+        a_hx "trigger" ["every 59s"] ;
         a_id "posts_container" ;
       ] (
         posts |> List.rev_map (
@@ -208,9 +208,9 @@ let content_template header content =
 (*                                                    which is usually... something.         *)
 (*********************************************************************************************)
 let infinite_template left_content middle_content right_content =
-  div ~a:[a_class ["flex flex-row"]] [
+  div ~a:[a_class ["flex" ; "flex-row"]] [
     div ~a:[a_class ["flex" ; "flex-col" ; "grow"]] [left_content] ;
-    div ~a:[a_class ["flex" ; "flex-col" ; "w-[500px]"]] [middle_content] ;
+    div ~a:[a_class ["flex" ; "flex-col" ; "w-[525px]" ; "border-x" ; "px-4" ; "mx-4"]] [middle_content] ;
     div ~a:[a_class ["flex" ; "flex-col" ; "grow"]] [right_content] ;
   ]
 

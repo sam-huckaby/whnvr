@@ -23,9 +23,10 @@ let feed_page_template posts =
           Builder.a_hx_typed Target ["#feed_container"] ;
           Builder.a_hx_typed Swap ["innerHTML"] ;
       ] [
+        h1 ~a:[a_class ["text-xl" ; "font-bold"]] [txt "Home"] ;
         textarea ~a:[
-          a_class ["w-full" ; "h-[200px]" ; "border"] ;
-          a_name "postMessage"
+          a_class ["w-full" ; "h-[100px]" ; "border"] ;
+          a_name "postMessage" ;
         ] (txt "") ;
         input ~a:[
           a_class (Builder.button_styles @ ["w-full"]) ;
