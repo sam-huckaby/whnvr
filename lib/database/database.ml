@@ -31,8 +31,9 @@ let posts_table, Expr.[posts_id_field ; posts_user_id_field ; posts_message_fiel
       field "created" ~ty:Type.time ;
      ]
 
-(* define an query to collect all rows *)
-let collect_all db =
+(* define an query to collect all posts *)
+(* db is a Caqti_lwt.connection *)
+let fetch_posts db =
     Query.select Expr.[posts_id_field ; posts_user_id_field] ~from:posts_table
     |> Request.make_many
     |> Petrol.collect_list db

@@ -60,6 +60,14 @@ let () =
       Petrol.VersionedSchema.initialise
         DB.db conn in
 *)
+  (* <-- Uncomment these lines to continue wiring Petrol into the main startup function of the server (for migrations)
+  let () = Lwt_main.run (
+    let open Lwt_result.Syntax in
+    let* conn = Caqti_lwt.connect url in
+    let* () = Petrol.VersionedSchema.initialise Database.schema conn in
+    Lwt.return ()
+  ) in
+  *)
   Dream.run ~interface:"0.0.0.0"
   @@ Dream.logger
   (* George, if you read this, I promise this is not a password I'm really using, please don't fire me. *)
