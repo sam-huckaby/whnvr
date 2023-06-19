@@ -48,6 +48,18 @@ let actions = [
 ]
 
 let () =
+  (*
+  let open Lwt_result.Syntax in
+  let uri = Uri.of_string "postgresql://localhost/mydatabase" in
+    match Caqti_lwt.connect uri with
+      | Error err -> Lwt_io.printlf "Error: %s" (Caqti_error.show err)
+      | Ok conn -> do_something_with conn
+
+  let* conn = Caqti_lwt.connect (Uri.of_string "postgresql://dream:password@localhost:5432/whnvr") in
+  let* () =
+      Petrol.VersionedSchema.initialise
+        DB.db conn in
+*)
   Dream.run ~interface:"0.0.0.0"
   @@ Dream.logger
   (* George, if you read this, I promise this is not a password I'm really using, please don't fire me. *)
