@@ -40,7 +40,7 @@ type post_result = {
   message : string ;
   username : string ;
   display_name : string ;
-  created : int ;
+  created : Ptime.t ;
 }
 
 let decode
@@ -69,16 +69,22 @@ let fetch_posts db =
       username_ref ;
       display_name_ref ;
       Posts.message ;
-      Posts.user_id ;
-     ] ~from:Posts.table
-    |> Query.join ~op:INNER ~on:Expr.(Posts.user_id = user_id_ref) (Query.select Expr.[
-      user_id ;
-      display_name ;
-      username ;
-    ] ~from:Users.table)
-      |> Request.make_many
-      |> Petrol.collect_list db
-      |> Lwt_result.map (List.map decode)
+      Posts.created ;
+    ]
+    ~from:Posts.table 
+  |> Query.join
+    ~op:INNER ~on:Expr.(Posts.user_id = user_id_ref)
+    (
+      Query.select [
+        user_id ;
+        username ;
+        display_name ;
+      ] 
+      ~from:Users.table
+    )
+    |> Request.make_many
+    |> Petrol.collect_list db
+    |> Lwt_result.map (List.map decode)
 
 (** Initialize the database and run any migrations that might need to be applied still *)    
 let initialize_db = 
@@ -87,37 +93,3 @@ let initialize_db =
   | Error err -> Lwt.fail_with (Caqti_error.show err)
   | Ok conn -> Petrol.VersionedSchema.initialise schema conn |> Lwt.return
 
-(* ============================================================ *)
-  (* OLD WAY PRE-PETROL BELOW *)
-(* ============================================================ *)
-(* This is a very SIMPLY database query. Needs to be wrapped in something, so it can be standardized *)
-(*
-let list_posts =
-  let query =
-    let open Caqti_request.Infix in
-    (T.unit ->* T.(tup4 string string string string))
-    "SELECT posts.message,
-            users.username,
-            users.display_name,
-            to_char(posts.created, 'MM-DD-YYYY @ HH:MI') AS created
-    FROM posts
-    INNER JOIN users ON posts.user_id = users.id" in
-  fun (module Db : DB) ->
-    let%lwt posts_or_error = Db.collect_list query () in
-    Caqti_lwt.or_fail posts_or_error
-
-
-let query_posts =
-  [%rapper
-      get_many
-        {sql|
-          SELECT @string{posts.id},
-                 @string{posts.message},
-                 @string{users.username},
-                 @string{users.display_name},
-                 @string{to_char(posts.created, 'MM-DD-YYYY @ HH:MI') AS created}
-          FROM posts
-          INNER JOIN users ON posts.user_id = users.id
-        |sql}
-    ]
-*)

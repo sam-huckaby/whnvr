@@ -133,7 +133,7 @@ let list_posts posts =
                 div ~a:[a_class ["mt-4"]] [
                   p ~a:[a_class ["text-gray-800 text-base"]] [txt post.message] ;
                   div ~a:[a_class ["mt-4"]] [
-                    span ~a:[a_class ["text-gray-500 text-xs uppercase"]] [txt (string_of_int post.created)]
+                    span ~a:[a_class ["text-gray-500 text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)]
                   ]
                 ]
               ] ;
