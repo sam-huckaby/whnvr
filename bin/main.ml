@@ -27,10 +27,10 @@ let pages = [
 (* The below "fragments" are page pieces that can be hot swapped out with htmx *)
 let fragments = [
   Dream.get "/posts" (fun request ->
-    let%lwt posts = Dream.sql request (Database.query_posts ()) in
+    let%lwt posts = Dream.sql request Database.fetch_posts in
     match posts with
     | Ok (posts) -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
-    | _ -> Dream.response (Builder.error_page ()) |> Lwt.return
+    | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return
   ) ;
 
   Dream.get "/colorize" (fun _ ->
@@ -40,34 +40,19 @@ let fragments = [
 
 let actions = [
   Dream.post "/posts" (fun request ->
-    let%lwt posts = Dream.sql request (Database.query_posts ()) in
+    let%lwt posts = Dream.sql request Database.fetch_posts in
     match posts with
     | Ok (posts) -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
-    | _ -> Dream.response (Builder.error_page ()) |> Lwt.return
+    | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return
   );
 ]
 
 let () =
   (*
-  let open Lwt_result.Syntax in
-  let uri = Uri.of_string "postgresql://localhost/mydatabase" in
-    match Caqti_lwt.connect uri with
-      | Error err -> Lwt_io.printlf "Error: %s" (Caqti_error.show err)
-      | Ok conn -> do_something_with conn
-
-  let* conn = Caqti_lwt.connect (Uri.of_string "postgresql://dream:password@localhost:5432/whnvr") in
-  let* () =
-      Petrol.VersionedSchema.initialise
-        DB.db conn in
-*)
-  (* <-- Uncomment these lines to continue wiring Petrol into the main startup function of the server (for migrations)
-  let () = Lwt_main.run (
-    let open Lwt_result.Syntax in
-    let* conn = Caqti_lwt.connect url in
-    let* () = Petrol.VersionedSchema.initialise Database.schema conn in
-    Lwt.return ()
-  ) in
-  *)
+    I NEED TO RUN PETROL's INITIALISE FUNCTION HERE SOMEHOW
+    I am going to build a method on the Database module to do this
+    because this file should not know about database stuff.
+   *)
   Dream.run ~interface:"0.0.0.0"
   @@ Dream.logger
   (* George, if you read this, I promise this is not a password I'm really using, please don't fire me. *)

@@ -2,7 +2,6 @@
 An HTMX builder that constructions components for use
 in various parts of the WHNVR app.
 *)
-
 open Tyxml
 open Tyxml_html
 
@@ -109,6 +108,7 @@ let submit =
 (* look like standard social media tiles using TailwindCSS and the magic of friendship.      *)
 (*********************************************************************************************)
 (* I need to modify this to assign id attributes to everything, so that the screen doesn't flicker *)
+(* TODO: Clean up the database types. Should they be imported here at all? *)
 let list_posts posts =
       div ~a:[
         a_class ["flex flex-col items-center gap-4"] ;
@@ -118,22 +118,22 @@ let list_posts posts =
         a_id "posts_container" ;
       ] (
         posts |> List.rev_map (
-          fun (id, message, username, display_name, created) -> 
-            div ~a:[a_class ["p-4 bg-white rounded-lg overflow-hidden shadow-md w-[500px]"] ; a_id id] [
+          fun (post: Database.post_result) -> 
+            div ~a:[a_class ["p-4 bg-white rounded-lg overflow-hidden shadow-md w-[500px]"] ; a_id (Int64.to_string post.id)] [
               div ~a:[a_class ["p-4"]] [
                 div ~a:[a_class ["flex items-center"]] [
                   div ~a:[a_class ["flex-shrink-0"]] [
                     img ~a:[a_class ["h-12 w-12 rounded-full"]] ~src:"https://picsum.photos/seed/example1/200/200" ~alt:"User Profile Picture" () ;
                   ] ;
                   div ~a:[a_class ["ml-4"]] [
-                    h2 ~a:[a_class ["text-lg font-semibold text-gray-900"]] [txt display_name] ;
-                    p ~a:[a_class ["text-sm font-medium text-gray-500"]] [txt ("@" ^ username)]
+                    h2 ~a:[a_class ["text-lg font-semibold text-gray-900"]] [txt post.display_name] ;
+                    p ~a:[a_class ["text-sm font-medium text-gray-500"]] [txt ("@" ^ post.username)]
                   ]
                 ] ;
                 div ~a:[a_class ["mt-4"]] [
-                  p ~a:[a_class ["text-gray-800 text-base"]] [txt message] ;
+                  p ~a:[a_class ["text-gray-800 text-base"]] [txt post.message] ;
                   div ~a:[a_class ["mt-4"]] [
-                    span ~a:[a_class ["text-gray-500 text-xs uppercase"]] [txt created]
+                    span ~a:[a_class ["text-gray-500 text-xs uppercase"]] [txt (string_of_int post.created)]
                   ]
                 ]
               ] ;
@@ -141,7 +141,7 @@ let list_posts posts =
         )
       )
 
-let error_page () =
+let error_page message =
   compile_html (
     html 
     (head (title (txt "Error!")) [
@@ -153,6 +153,9 @@ let error_page () =
         h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "That Seems Like A Problem" ] ;
         div ~a:[a_class ["p-4"]] [
           txt "This is the error page. If you've reached it, then you must have had a problem. I would go back if I were you." ;
+        ] ;
+        div ~a:[a_class ["p-4" ; "bg-red-600"]] [
+          txt message
         ] ;
         div ~a:[a_class ["p-4"]] [
           txt "Just use the back button in your browser, like normal." ;
