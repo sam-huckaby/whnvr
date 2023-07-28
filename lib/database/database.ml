@@ -56,9 +56,53 @@ let decode
     created ;
   }
 
+let fetch_posts db =
+  let users = Query.select [Users.id ; Users.username ; Users.display_name] ~from:Users.table in
+  let posts = Query.select [Posts.id ; Posts.message ; Users.username ; Users.display_name ; Posts.created] ~from:Posts.table in
+  let on = Expr.(Users.id = Posts.user_id) in
+  Query.join ~op:INNER ~on users posts
+  |> Request.make_many
+  |> Petrol.collect_list db
+  |> Lwt_result.map (List.map decode)
+
 (* define an query to collect all posts *)
 (* db is a Caqti_lwt.connection *)
 (* NEED TO RETURN: id, message, username, display_name, created *)
+let old_fetch_posts db =
+  let user_id, user_id_ref = Expr.as_ Users.id ~name:"user_id" in
+  let username, username_ref = Expr.as_ Users.username ~name:"username" in
+  let display_name, display_name_ref = Expr.as_ Users.display_name ~name:"display_name" in
+  Query.select 
+    Expr.[
+      Posts.id ;
+      username_ref ;
+      display_name_ref ;
+      Posts.message ;
+      Posts.created ;
+    ]
+    ~from:Posts.table 
+  |> Query.join
+    ~op:LEFT ~on:Expr.(Posts.user_id = user_id_ref)
+    (
+      Query.select [
+        user_id ;
+        username ;
+        display_name ;
+      ] 
+      ~from:Users.table
+    )
+    |> Request.make_many
+    |> Petrol.collect_list db
+    |> Lwt_result.map (List.map decode)
+
+(** Initialize the database and run any migrations that might need to be applied still *)    
+let initialize_db = 
+  let%lwt conn = Caqti_lwt.connect (Uri.of_string "postgresql://dream:password@localhost:5432/whnvr") in
+  match conn with
+  | Error err -> Lwt.fail_with (Caqti_error.show err)
+  | Ok conn -> Petrol.VersionedSchema.initialise schema conn |> Lwt.return
+
+(*
 let fetch_posts db =
   let user_id, user_id_ref = Expr.as_ Users.id ~name:"user_id" in
   let username, username_ref = Expr.as_ Users.username ~name:"username" in
@@ -85,11 +129,4 @@ let fetch_posts db =
     |> Request.make_many
     |> Petrol.collect_list db
     |> Lwt_result.map (List.map decode)
-
-(** Initialize the database and run any migrations that might need to be applied still *)    
-let initialize_db = 
-  let%lwt conn = Caqti_lwt.connect (Uri.of_string "postgresql://dream:password@localhost:5432/whnvr") in
-  match conn with
-  | Error err -> Lwt.fail_with (Caqti_error.show err)
-  | Ok conn -> Petrol.VersionedSchema.initialise schema conn |> Lwt.return
-
+*)

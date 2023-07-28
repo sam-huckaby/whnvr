@@ -154,8 +154,8 @@ let error_page message =
         div ~a:[a_class ["p-4"]] [
           txt "This is the error page. If you've reached it, then you must have had a problem. I would go back if I were you." ;
         ] ;
-        div ~a:[a_class ["p-4" ; "bg-red-600"]] [
-          txt message
+        pre ~a:[a_class ["p-4" ; "bg-red-600" ; "whitespace-pre-wrap"]] [
+          txt (String.concat " \n " (String.split_on_char '\n' message))
         ] ;
         div ~a:[a_class ["p-4"]] [
           txt "Just use the back button in your browser, like normal." ;
