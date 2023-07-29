@@ -157,9 +157,11 @@ let error_page message =
         pre ~a:[a_class ["p-4" ; "bg-red-600" ; "whitespace-pre-wrap"]] [
           txt (String.concat " \n " (String.split_on_char '\n' message))
         ] ;
+        (*
         pre ~a:[a_class ["bg-blue-600"]] [
           txt (Database.print_fetch_posts)
         ] ;
+        *)
         div ~a:[a_class ["p-4"]] [
           txt "Just use the back button in your browser, like normal." ;
         ] ;

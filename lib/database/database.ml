@@ -75,7 +75,7 @@ let print_new_fetch_posts =
 
 (* This is a query which utilizes a workaround in Petrol with aliased fields for the join *)
 let fetch_posts db =
-  let user_id, user_id_ref = Expr.as_ Users.id ~name:"user_id" in
+  let user_id, user_id_ref = Expr.as_ Users.id ~name:"joined_user_id" in
   let username, username_ref = Expr.as_ Users.username ~name:"username" in
   let display_name, display_name_ref = Expr.as_ Users.display_name ~name:"display_name" in
   Query.select 
