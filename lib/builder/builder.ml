@@ -118,7 +118,7 @@ let list_posts posts =
         a_id "posts_container" ;
       ] (
         posts |> List.rev_map (
-          fun (post: Database.post_result) -> 
+          fun (post: Database.HydratedPost.t) -> 
             div ~a:[a_class ["p-4 bg-white rounded-lg overflow-hidden shadow-md w-[500px]"] ; a_id (Int64.to_string post.id)] [
               div ~a:[a_class ["p-4"]] [
                 div ~a:[a_class ["flex items-center"]] [
