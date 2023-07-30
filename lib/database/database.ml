@@ -56,7 +56,34 @@ module HydratedPost = struct
   }
 end
 
+(*
+TODO:
+  - Add a hashed password field to the Users table *shiver*
+  - Add a TTL field to the Users table
+  - Modify the login page to submit username back to server
+  - - If the username does not exist, create a new user with 60 minute TTL
+  - - If the username does exist, prompt the user for their password
+  - - Validate provided password
+  - - - On failure -> redirect to login
+  - - - On success -> set User TTL to 30 days in the future, redirect to feed, and set JWT cookie (HTTP only)
+  - Wire post form on Feed page to server
+  - Add TTL field to the Posts table (default to 24 hours in the future? maybe?)
+  - Create DB function create_post
+  - - Use info from JWT to set user-level details on new post 
+  - ... profit?
+ *)
+
+let create_user username bio display_name db =
+  Query.insert ~table:Users.table ~values:(Expr.[
+    Users.username := s username ;
+    Users.bio := s bio ;
+    Users.display_name := s display_name ;
+  ])
+  |> Request.make_zero
+  |> Petrol.exec db
+
 (* This is a possible version of query with join that will hopefully be possible to use in the future *)
+(* THIS DOES NOT WORK YET, AS OF JULY 30, 2023 *)
 let new_fetch_posts db =
   let users = Query.select [Users.id ; Users.username ; Users.display_name] ~from:Users.table in
   let posts = Query.select [Posts.id ; Posts.message ; Users.username ; Users.display_name ; Posts.created] ~from:Posts.table in

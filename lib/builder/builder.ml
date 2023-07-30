@@ -98,7 +98,7 @@ let create_fancy_div () =
   ] [txt "This is a FANCY div"]
 
 let button_styles =
-  ["border" ; "rounded" ; "border-gray-300" ; "hover:bg-neutral-100" ; "cursor-pointer"]
+  ["border" ; "rounded" ; "border-green-700" ; "text-neutral-300" ; "hover:bg-neutral-100/10" ; "cursor-pointer" ; "px-4" ; "py-2"]
 let submit =
     Html.[input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Submit"] () ]
 
@@ -157,11 +157,6 @@ let error_page message =
         pre ~a:[a_class ["p-4" ; "bg-red-600" ; "whitespace-pre-wrap"]] [
           txt (String.concat " \n " (String.split_on_char '\n' message))
         ] ;
-        (*
-        pre ~a:[a_class ["bg-blue-600"]] [
-          txt (Database.print_fetch_posts)
-        ] ;
-        *)
         div ~a:[a_class ["p-4"]] [
           txt "Just use the back button in your browser, like normal." ;
         ] ;
@@ -170,13 +165,22 @@ let error_page message =
   )
 
 let login_dialog =
-  div ~a:[a_class ["rounded" ; "w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8"]] [
-    h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "Welcome To The Void" ] ;
-    div ~a:[a_class ["p-4"]] [
-      input ~a:[a_input_type `Text ; a_class ["rounded" ; "border-green-600"]] () 
+  div ~a:[a_class ["rounded" ; "w-full" ; "h-full" ; "flex" ; "flex-col" ; "items-center" ; "justify-center" ; "p-8"]] [
+    (*h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "Welcome To The Void" ] ;*)
+    div ~a:[a_class ["p-4" ; "text-green-500"]] [
+      txt "$ echo " ;
+      input ~a:[a_input_type `Text ; a_class [
+        "bg-neutral-700" ;
+        "outline-0" ;
+        "px-2" ;
+        "border-b" ;
+        "border-b-solid" ;
+        "border-green-500" ;
+      ]] () ;
+      txt " >> /dev/null" ;
     ] ;
     div ~a:[a_class ["p-4"]] [
-      txt "This is the second child" ;
+      input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Continue"] () ;
     ] ;
   ]
 
@@ -195,7 +199,7 @@ let html_wrapper page_title content =
         script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/htmx.org/dist/htmx.min.js")] (txt "");
         script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "");
     ])
-    (body [content])
+    (body ~a:[a_class ["bg-neutral-700"]] [content])
 
 (*********************************************************************************************)
 (*                                    content_template                                       *)
@@ -225,7 +229,7 @@ let content_template header content =
 (*********************************************************************************************)
 let centered_template content =
   div ~a:[a_class ["absolute" ; "flex" ; "flex-col" ; "justify-center" ; "items-center" ; "h-full" ; "w-full"]] [
-    div ~a:[a_class ["rounded" ; "bg-gray-400" ; "h-[300px]" ; "w-[600px]"]] [content] ;
+    div ~a:[a_class ["bg-neutral-800" ; "rounded" ; "border" ; "border-solid" ; "border-green-500" ; "h-[300px]" ; "w-[600px]"]] [content] ;
   ]
 
 (*********************************************************************************************)
