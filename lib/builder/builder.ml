@@ -173,7 +173,7 @@ let login_dialog =
   div ~a:[a_class ["rounded" ; "w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8"]] [
     h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "Welcome To The Void" ] ;
     div ~a:[a_class ["p-4"]] [
-      input ~a:[a_input_type `Text]
+      input ~a:[a_input_type `Text ; a_class ["rounded" ; "border-green-600"]] () 
     ] ;
     div ~a:[a_class ["p-4"]] [
       txt "This is the second child" ;
