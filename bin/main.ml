@@ -18,6 +18,11 @@ let pages = [
     Dream.html page
   ) ;
 
+  Dream.get "/login" (fun request ->
+    let%lwt page = (Handler.generate_page Login request) in
+    Dream.html page
+  ) ;
+
   Dream.get "/hello" (fun request ->
     let%lwt page = (Handler.generate_page Hello request) in
     Dream.html page

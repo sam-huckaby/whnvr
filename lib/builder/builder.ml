@@ -169,6 +169,17 @@ let error_page message =
     ])
   )
 
+let login_dialog =
+  div ~a:[a_class ["rounded" ; "w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8"]] [
+    h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "Welcome To The Void" ] ;
+    div ~a:[a_class ["p-4"]] [
+      input ~a:[a_input_type `Text]
+    ] ;
+    div ~a:[a_class ["p-4"]] [
+      txt "This is the second child" ;
+    ] ;
+  ]
+
 (*********************************************************************************************)
 (*                                      html_wrapper                                         *)
 (* This is the main page wrapping function. Every page will go through this function so that *)
@@ -202,6 +213,19 @@ let content_template header content =
       div ~a:[a_class ["bg-red-600 grow"]] [content] ;
       div ~a:[a_class ["sm:w-[10%]"]] [] ;
     ]
+  ]
+
+(*********************************************************************************************)
+(*                                    centered_template                                       *)
+(* This is the layout to be used with a standard content page. It features a large upper div *)
+(* that is sometimes called a "jumbotron" in other systems. Anything can go here, but        *)
+(* normally it's like a line of text and a background picture or something.                  *)
+(* @param {[< html_types.flow5 ] elt} header - The element that will be displayed at the top *)
+(* @param {[< html_types.flow5 ] elt} content - The content for the page,                    *)
+(*********************************************************************************************)
+let centered_template content =
+  div ~a:[a_class ["absolute" ; "flex" ; "flex-col" ; "justify-center" ; "items-center" ; "h-full" ; "w-full"]] [
+    div ~a:[a_class ["rounded" ; "bg-gray-400" ; "h-[300px]" ; "w-[600px]"]] [content] ;
   ]
 
 (*********************************************************************************************)
