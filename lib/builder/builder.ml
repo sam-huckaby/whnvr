@@ -166,21 +166,30 @@ let error_page message =
 
 let login_dialog =
   div ~a:[a_class ["rounded" ; "w-full" ; "h-full" ; "flex" ; "flex-col" ; "items-center" ; "justify-center" ; "p-8"]] [
-    (*h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "Welcome To The Void" ] ;*)
-    div ~a:[a_class ["p-4" ; "text-green-500"]] [
-      txt "$ echo " ;
-      input ~a:[a_input_type `Text ; a_class [
-        "bg-neutral-700" ;
-        "outline-0" ;
-        "px-2" ;
-        "border-b" ;
-        "border-b-solid" ;
-        "border-green-500" ;
-      ]] () ;
-      txt " >> /dev/null" ;
-    ] ;
-    div ~a:[a_class ["p-4"]] [
-      input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Continue"] () ;
+    form ~a:[
+      a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
+      a_hx_typed Post ["/engage"] ;
+      a_name "login_form" ;
+    ] [
+      div ~a:[a_class ["p-4" ; "text-green-500"]] [
+        txt "$ echo " ;
+        input ~a:[
+          a_input_type `Text ;
+          a_class [
+            "bg-neutral-700" ;
+            "outline-0" ;
+            "px-2" ;
+            "border-b" ;
+            "border-b-solid" ;
+            "border-green-500" ;
+          ] ;
+          a_name "username"
+        ] () ;
+        txt " >> /dev/null" ;
+      ] ;
+      div ~a:[a_class ["p-4"]] [
+        input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Continue"] () ;
+      ] ;
     ] ;
   ]
 

@@ -11,25 +11,27 @@ let schema = VersionedSchema.init version ~name:"whnvr"
 
 (* declare a table, returning the table name and fields *)
 module Users = struct
-  let table, Expr.[id ; username ; bio ; display_name] =
+  let table, Expr.[id ; username ; display_name ; expires ; secret] =
     VersionedSchema.declare_table schema ~name:"users"
       Schema.[
-        field ~constraints:[primary_key ~auto_increment:true ()] "id" ~ty:Type.int;
-        field "username" ~ty:Type.(character_varying 32);
-        field "bio" ~ty:Type.(character_varying 32);
-        field "display_name" ~ty:Type.(character_varying 32);
+        field ~constraints:[primary_key ~auto_increment:true ()] "id" ~ty:Type.int ;
+        field "username" ~ty:Type.(character_varying 32) ;
+        field "display_name" ~ty:Type.(character_varying 32) ;
+        field "expires" ~ty:Type.time ;
+        field "secret" ~ty:Type.text ;
       ]
 end
 
 (* declare a table, returning the table name and fields *)
 module Posts = struct
-  let table, Expr.[id ; user_id ; message ; created] =
+  let table, Expr.[id ; user_id ; message ; created ; expires] =
     VersionedSchema.declare_table schema ~name:"posts"
       Schema.[
         field ~constraints:[primary_key ~auto_increment:true () ; not_null ()] "id" ~ty:Type.big_int;
         field ~constraints:[foreign_key ~table:Users.table ~columns:Expr.[Users.id] ()] "user_id" ~ty:Type.int ;
         field "message" ~ty:(Type.character_varying 140) ;
         field "created" ~ty:Type.time ;
+        field "expires" ~ty:Type.time ;
       ]
 end
 
@@ -59,7 +61,7 @@ end
 (*
 TODO:
   - Add a hashed password field to the Users table *shiver*
-  - Add a TTL field to the Users table
+  - Add an expires field to the Users table
   - Modify the login page to submit username back to server
   - - If the username does not exist, create a new user with 60 minute TTL
   - - If the username does exist, prompt the user for their password
@@ -67,17 +69,31 @@ TODO:
   - - - On failure -> redirect to login
   - - - On success -> set User TTL to 30 days in the future, redirect to feed, and set JWT cookie (HTTP only)
   - Wire post form on Feed page to server
-  - Add TTL field to the Posts table (default to 24 hours in the future? maybe?)
+  - Add expires field to the Posts table (default to 24 hours in the future? maybe?)
   - Create DB function create_post
   - - Use info from JWT to set user-level details on new post 
   - ... profit?
- *)
+*)
 
-let create_user username bio display_name db =
+let find_user username db =
+  Query.select ~from:Users.table
+  Expr.[
+    Users.username ;
+  ]
+  |> Query.where Expr.( Users.username = s username )
+  |> Request.make_one
+  |> Petrol.find db
+  |> Lwt_result.map (function
+    | (Some username) -> username
+    | (None) -> "not found"
+  )
+
+(** Creating a user only sets these key fields. Everything else is set dynamically elsewhere. *)
+let create_user username display_name secret db =
   Query.insert ~table:Users.table ~values:(Expr.[
     Users.username := s username ;
-    Users.bio := s bio ;
     Users.display_name := s display_name ;
+    Users.secret := s secret ;
   ])
   |> Request.make_zero
   |> Petrol.exec db

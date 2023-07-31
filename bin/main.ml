@@ -41,6 +41,15 @@ let fragments = [
   Dream.get "/colorize" (fun _ ->
     Dream.html (Builder.compile_elt (Builder.create_fancy_div ()))
   ) ;
+
+  Dream.post "/engage" (fun request ->
+    (* Take the username, check the DB, return EITHER a password form or a registration page *)
+    let%lwt username = Dream.body request in
+    let%lwt user = Dream.sql request Database.find_user (username) in
+    match user with
+    | Ok (user) -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
+    | Not_found () -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
+  ) ;
 ]
 
 let actions = [
