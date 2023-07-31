@@ -81,12 +81,15 @@ let find_user username db =
     Users.username ;
   ]
   |> Query.where Expr.( Users.username = s username )
+  |> Request.make_zero_or_one
+  |> Petrol.find_opt db
+  |> Lwt.map (Option.map (fun (username, _) -> username))
+
+(*
   |> Request.make_one
   |> Petrol.find db
-  |> Lwt_result.map (function
-    | (Some username) -> username
-    | (None) -> "not found"
-  )
+  |> Lwt_result.map (fun (username, ()) -> username)
+*)
 
 (** Creating a user only sets these key fields. Everything else is set dynamically elsewhere. *)
 let create_user username display_name secret db =

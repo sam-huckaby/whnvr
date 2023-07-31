@@ -193,6 +193,45 @@ let login_dialog =
     ] ;
   ]
 
+let access_dialog found_user = 
+    form ~a:[
+      a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
+      a_hx_typed Post ["/authenticate"] ;
+      a_name "access_form" ;
+    ] [
+      div ~a:[a_class ["p-4" ; "text-green-500"]] [
+        txt (found_user) ;
+        input ~a:[
+          a_input_type `Text ;
+          a_class [
+            "bg-neutral-700" ;
+            "outline-0" ;
+            "px-2" ;
+            "border-b" ;
+            "border-b-solid" ;
+            "border-green-500" ;
+          ] ;
+          a_name "username"
+        ] () ;
+      ] ;
+      div ~a:[a_class ["p-4"]] [
+        input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Continue"] () ;
+      ] ;
+    ]
+
+let enroll_dialog = 
+    div ~a:[
+      a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
+    ] [
+      div ~a:[a_class ["p-4" ; "text-green-500"]] [
+        txt "$ echo " ;
+        txt " >> /dev/null" ;
+      ] ;
+      div ~a:[a_class ["p-4"]] [
+        input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Continue"] () ;
+      ] ;
+    ]
+
 (*********************************************************************************************)
 (*                                      html_wrapper                                         *)
 (* This is the main page wrapping function. Every page will go through this function so that *)
