@@ -76,6 +76,18 @@ TODO:
 *)
 
 let find_user username db =
+  let%lwt found = Query.select ~from:Users.table
+  Expr.[
+    Users.username ;
+  ]
+  |> Query.where Expr.( Users.username = s username )
+  |> Request.make_zero_or_one
+  |> Petrol.find_opt db in
+  match found with
+  | Ok user -> Lwt.return user
+  | Error err -> Lwt.return (Some ((Caqti_error.show err), ()))
+
+let new_find_user username db =
   Query.select ~from:Users.table
   Expr.[
     Users.username ;
@@ -83,13 +95,6 @@ let find_user username db =
   |> Query.where Expr.( Users.username = s username )
   |> Request.make_zero_or_one
   |> Petrol.find_opt db
-  |> Lwt.map (Option.map (fun (username, _) -> username))
-
-(*
-  |> Request.make_one
-  |> Petrol.find db
-  |> Lwt_result.map (fun (username, ()) -> username)
-*)
 
 (** Creating a user only sets these key fields. Everything else is set dynamically elsewhere. *)
 let create_user username display_name secret db =

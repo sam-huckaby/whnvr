@@ -44,11 +44,14 @@ let fragments = [
 
   Dream.post "/engage" (fun request ->
     (* Take the username, check the DB, return EITHER a password form or a registration page *)
-    let%lwt username = Dream.body request in
-    let%lwt user = Dream.sql request (Database.find_user username) in
-    match user with
-    | Ok (found) -> Dream.html (Builder.compile_elt (Builder.access_dialog found))
-    | Error (_) -> Dream.html (Builder.compile_elt (Builder.enroll_dialog))
+    match%lwt Dream.form request with
+    | `Ok [( "username", username )] ->
+      let%lwt user = Dream.sql request (Database.find_user username) in
+      match user with
+      | Some (found, _) -> Dream.html (Builder.compile_elt (Builder.access_dialog found))
+      | None -> Dream.html (Builder.compile_elt (Builder.access_dialog username))
+    | `Ok _ ->
+      Dream.html "Missing username"
   ) ;
 ]
 
