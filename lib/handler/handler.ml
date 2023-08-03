@@ -51,11 +51,11 @@ let hello_page _ =
   ) |> Lwt.return
 
 (* The login page is where the user enters their username and either logs in or registers *)
-let login_page _ =
+let login_page request =
   Builder.compile_html (
     Builder.html_wrapper 
       "Login To The Void"
-      (Builder.centered_template Builder.login_dialog)
+      (Builder.centered_template (Builder.login_dialog request))
   ) |> Lwt.return
 
 (* The feed page is where the social messages will appear in this test of infinite loading *)

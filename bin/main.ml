@@ -1,12 +1,5 @@
-(*
-  Plans:
-    - Implement a basic DB, maybe PostgreSQL
-    - Configure a simple Twitter clone template
-    - Wire htmx to handle all the logic
-      - Tweet container to poll for new tweets from the DB 
-      - Tweet button stores text content and resets form 
-      - Accessible from multuple browser tabs simultaneously
- *)
+(* This is a simple list item finder. I need to either inline this or decide why not to. *)
+let find_list_item l item = List.find (fun (key, _) -> key = item) l
 
 (* Am I supposed to break these out into separate files eventually? *)
 (* It does seem like these list of routes could get enormous *)
@@ -43,15 +36,16 @@ let fragments = [
   ) ;
 
   Dream.post "/engage" (fun request ->
-    (* Take the username, check the DB, return EITHER a password form or a registration page *)
     match%lwt Dream.form request with
-    | `Ok [( "username", username )] ->
-      let%lwt user = Dream.sql request (Database.find_user username) in
-      match user with
-      | Some (found, _) -> Dream.html (Builder.compile_elt (Builder.access_dialog found))
-      | None -> Dream.html (Builder.compile_elt (Builder.access_dialog username))
-    | `Ok _ ->
-      Dream.html "Missing username"
+    | `Ok form ->
+      begin
+        let (_, username) = find_list_item form "username" in
+        let%lwt user = Dream.sql request (Database.find_user username) in
+        match user with
+        | Some (found, _) -> Dream.html (Builder.compile_elt (Builder.access_dialog found))
+        | None -> Dream.html (Builder.compile_elt (Builder.enroll_dialog username "holy-stinking-secrets-batman"))
+      end
+    | _ -> Dream.response (Builder.error_page "Oh my gosh, is that a panda!?") |> Lwt.return
   ) ;
 ]
 

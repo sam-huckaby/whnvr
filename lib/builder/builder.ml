@@ -164,13 +164,14 @@ let error_page message =
     ])
   )
 
-let login_dialog =
+let login_dialog request =
   div ~a:[a_class ["rounded" ; "w-full" ; "h-full" ; "flex" ; "flex-col" ; "items-center" ; "justify-center" ; "p-8"]] [
     form ~a:[
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
       a_hx_typed Post ["/engage"] ;
       a_name "login_form" ;
     ] [
+      (Dream.csrf_tag request) |> Unsafe.data ;
       div ~a:[a_class ["p-4" ; "text-green-500"]] [
         txt "$ echo " ;
         input ~a:[
@@ -219,13 +220,25 @@ let access_dialog found_user =
       ] ;
     ]
 
-let enroll_dialog = 
+(** The enroll dialog needs to receive a new secret key that can be displayed
+ * a single time to the user, for them to use going forward. Users will never
+ * set their own passwords, and when I have time, I will build a library to 
+ * use Beyond Identity's passkeys because passwords are the devil. *)
+let enroll_dialog new_name new_secret = 
     div ~a:[
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
     ] [
       div ~a:[a_class ["p-4" ; "text-green-500"]] [
-        txt "$ echo " ;
-        txt " >> /dev/null" ;
+        p [
+          txt "Enroll " ;
+          txt new_name ;
+        ] ;
+        p [
+          txt "Store this secret for later, you will never see it again:" ;
+        ] ;
+        p [
+          txt new_secret ;
+        ]
       ] ;
       div ~a:[a_class ["p-4"]] [
         input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Continue"] () ;
