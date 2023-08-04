@@ -98,7 +98,7 @@ let create_fancy_div () =
   ] [txt "This is a FANCY div"]
 
 let button_styles =
-  ["border" ; "rounded" ; "border-green-700" ; "text-neutral-300" ; "hover:bg-neutral-100/10" ; "cursor-pointer" ; "px-4" ; "py-2"]
+  ["border" ; "rounded" ; "border-[#95B9CB]" ; "text-[#95B9CB]" ; "hover:bg-[#1B2631]" ; "cursor-pointer" ; "px-4" ; "py-2"]
 let submit =
     Html.[input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Submit"] () ]
 
@@ -119,21 +119,24 @@ let list_posts posts =
       ] (
         posts |> List.rev_map (
           fun (post: Database.HydratedPost.t) -> 
-            div ~a:[a_class ["p-4 bg-white rounded-lg overflow-hidden shadow-md w-[500px]"] ; a_id (Int64.to_string post.id)] [
+            div ~a:[
+              a_class ["p-4" ; "bg-[#27333F]" ; "text-[#DEEAEF]" ; "rounded-lg" ; "overflow-hidden" ; "shadow-md" ; "w-[500px]"] ;
+              a_id (Int64.to_string post.id)
+            ] [
               div ~a:[a_class ["p-4"]] [
                 div ~a:[a_class ["flex items-center"]] [
                   div ~a:[a_class ["flex-shrink-0"]] [
                     img ~a:[a_class ["h-12 w-12 rounded-full"]] ~src:"https://picsum.photos/seed/example1/200/200" ~alt:"User Profile Picture" () ;
                   ] ;
                   div ~a:[a_class ["ml-4"]] [
-                    h2 ~a:[a_class ["text-lg font-semibold text-gray-900"]] [txt post.display_name] ;
-                    p ~a:[a_class ["text-sm font-medium text-gray-500"]] [txt ("@" ^ post.username)]
+                    h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;
+                    p ~a:[a_class ["text-sm font-medium text-[#DEEAEF]"]] [txt ("@" ^ post.username)]
                   ]
                 ] ;
                 div ~a:[a_class ["mt-4"]] [
-                  p ~a:[a_class ["text-gray-800 text-base"]] [txt post.message] ;
+                  p ~a:[a_class ["text-[#DEEAEF]"]] [txt post.message] ;
                   div ~a:[a_class ["mt-4"]] [
-                    span ~a:[a_class ["text-gray-500 text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)]
+                    span ~a:[a_class ["text-[#DEEAEF] text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)]
                   ]
                 ]
               ] ;
@@ -276,7 +279,7 @@ let html_wrapper page_title content =
         script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/htmx.org/dist/htmx.min.js")] (txt "");
         script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "");
     ])
-    (body ~a:[a_class ["bg-neutral-700"]] [content])
+    (body ~a:[a_class ["bg-[#18181B]" ; "text-[#DEEAEF]"]] [content])
 
 (*********************************************************************************************)
 (*                                    content_template                                       *)
@@ -323,20 +326,21 @@ let centered_template content =
 let infinite_template left_content middle_content right_content =
   div ~a:[a_class ["flex" ; "flex-row"]] [
     div ~a:[a_class ["flex" ; "flex-col" ; "grow"]] [left_content] ;
-    div ~a:[a_class ["flex" ; "flex-col" ; "w-[525px]" ; "border-x" ; "px-4" ; "mx-4"]] [middle_content] ;
+    div ~a:[a_class ["flex" ; "flex-col" ; "w-[525px]" ; "px-4" ; "mx-4"]] [middle_content] ;
     div ~a:[a_class ["flex" ; "flex-col" ; "grow"]] [right_content] ;
   ]
 
 let left_column () =
   div ~a:[a_class ["flex" ; "flex-col" ; "px-8"]] [
     div ~a:[a_class ["flex" ; "flex-row" ]] [
-      (txt "Twootsy-Wootsy")
+      (txt "WHNVR >> /dev/null")
     ]
   ]
 
 let right_column () =
   div ~a:[a_class ["flex" ; "flex-col" ; "px-8" ]] [
-    (txt "Search Here")
+    input ~a:[ a_input_type `Button ; a_class button_styles ; a_hx_typed Post ["/logout"] ; a_value "Logout"] () ;
+    (txt "FILTERS GO HERE") ;
   ]
 
 (*

@@ -82,7 +82,7 @@ let fragments = [
           let (_, secret) = find_list_item form "secret" in 
           let%lwt found_id = Dream.sql request (Database.authenticate username secret) in
           match found_id with
-          | Some (id, _) ->
+          | Some id ->
               let%lwt () = Dream.invalidate_session request in 
               let%lwt () = Dream.set_session_field request "id" id in
               Lwt.return (Dream.response ~headers:[("HX-Redirect", "/")] ~code:200 "Boy-Howdy")
@@ -93,13 +93,34 @@ let fragments = [
 ]
 
 let actions = [
+  (* One day this will create a new post - maybe *)
   Dream.post "/posts" (fun request ->
     let%lwt posts = Dream.sql request Database.fetch_posts in
     match posts with
     | Ok (posts) -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
     | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return
-  );
+  ) ;
+  Dream.post "/logout" (fun request ->
+    let%lwt () = Dream.invalidate_session request in 
+    Lwt.return (Dream.response ~headers:[("HX-Redirect", "/")] ~code:200 "Logged out!")
+  )
 ]
+
+let auth_middleware next request =
+    let unauthed_endpoints = [ "/login" ; "/engage" ; "/authenticate" ] in
+    let current_target = Dream.target request in
+    let no_auth_required = List.exists (String.equal current_target) unauthed_endpoints in
+    if no_auth_required then
+      next request
+    else
+      match Dream.session_field request "id" with
+      | None ->
+          (* Invalidate this session, to prevent session fixation attacks *)
+          let%lwt () = Dream.invalidate_session request in 
+          (*Lwt.return (Dream.response ~headers:[("HX-Redirect", "/login")] ~code:302 "Hello, Friend")*)
+          Dream.redirect request ~code:302 "/login"
+      | Some _ ->
+          next request
 
 let () =
   (* I should come up with a catchier name for the DB pass... maybe like Alfonso or something *)
@@ -110,6 +131,7 @@ let () =
   (* TODO: Make the rest of this connection string configurable *)
   @@ Dream.sql_pool ("postgresql://dream:" ^ db_password ^ "@localhost:5432/whnvr")
   @@ Dream.sql_sessions
+  @@ auth_middleware
   @@ Dream.router (
     pages @
     fragments @

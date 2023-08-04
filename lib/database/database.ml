@@ -81,8 +81,8 @@ TODO:
   X Add an expires field to the Users table
   X Modify the login page to submit username back to server
   - - If the username does not exist, create a new user with 60 minute TTL
-  - - If the username does exist, prompt the user for their password
-  - - Validate provided password
+  X - If the username does exist, prompt the user for their password
+  X - Validate provided password
   - - - On failure -> redirect to login
   - - - On success -> set User TTL to 30 days in the future, redirect to feed, and set JWT cookie (HTTP only)
   - Wire post form on Feed page to server
@@ -116,10 +116,10 @@ let authenticate username secret db =
   | Ok id_opt ->
       begin
         match id_opt with
-        | Some (id, _) -> Lwt.return (string_of_int id)
-        | None -> Lwt.return ""
+        | Some (id, _) -> Lwt.return (Some (string_of_int id))
+        | None -> Lwt.return None
       end
-  | Error err -> Lwt.return (Caqti_error.show err)
+  | Error _ -> Lwt.return None
 
 (** Creating a user only sets these key fields. Everything else is set dynamically elsewhere. *)
 let create_user username display_name secret db =
