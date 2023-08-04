@@ -80,9 +80,12 @@ let fragments = [
         begin
           let (_, username) = find_list_item form "username" in 
           let (_, secret) = find_list_item form "secret" in 
-          let%lwt made_it = Dream.sql request (Database.authenticate username secret) in
-          match made_it with
-          | Some _ -> Dream.redirect request "/" ~code:302
+          let%lwt found_id = Dream.sql request (Database.authenticate username secret) in
+          match found_id with
+          | Some (id, _) ->
+              let%lwt () = Dream.invalidate_session request in 
+              let%lwt () = Dream.set_session_field request "id" id in
+              Lwt.return (Dream.response ~headers:[("HX-Redirect", "/")] ~code:200 "Boy-Howdy")
           | None -> Dream.response (Builder.error_page "Bad payload from the login form") |> Lwt.return
         end
     | _ -> Dream.response (Builder.error_page "Bad payload from the login form") |> Lwt.return
@@ -99,15 +102,13 @@ let actions = [
 ]
 
 let () =
-  (*
-    I NEED TO RUN PETROL's INITIALISE FUNCTION HERE SOMEHOW
-    I am going to build a method on the Database module to do this
-    because this file should not know about database stuff.
-   *)
+  (* I should come up with a catchier name for the DB pass... maybe like Alfonso or something *)
+  (* Important note: This will throw `Not_found if the variable is not set, preventing execution *)
+  let db_password = Unix.getenv "DB_PASS" in 
   Dream.run ~interface:"0.0.0.0"
   @@ Dream.logger
-  (* George, if you read this, I promise this is not a password I'm really using, please don't fire me. *)
-  @@ Dream.sql_pool "postgresql://dream:password@localhost:5432/whnvr"
+  (* TODO: Make the rest of this connection string configurable *)
+  @@ Dream.sql_pool ("postgresql://dream:" ^ db_password ^ "@localhost:5432/whnvr")
   @@ Dream.sql_sessions
   @@ Dream.router (
     pages @

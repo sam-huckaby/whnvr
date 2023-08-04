@@ -15,6 +15,17 @@ let schema = VersionedSchema.init version ~name:"whnvr"
 
 (* TODO: Move individual table modules into separate files *)
 
+module Dream_Session = struct
+  let table, Expr.[id ; label ; expires_at ; payload] =
+    VersionedSchema.declare_table schema ~name:"dream_session"
+    Schema.[
+      field ~constraints:[primary_key ()] "id" ~ty:Type.text ;
+      field ~constraints:[not_null ()] "label" ~ty:Type.text ;
+      field ~constraints:[not_null ()] "expires_at" ~ty:Type.real ;
+      field ~constraints:[not_null ()] "payload" ~ty:Type.text ;
+    ]
+end
+
 (* declare a table, returning the table name and fields *)
 module Users = struct
   let table, Expr.[id ; username ; display_name ; expires ; secret] =
@@ -96,14 +107,19 @@ let find_user username db =
 let authenticate username secret db =
   let sha3 = Hash.sha3 256 in
   let test_hash = hash_string sha3 secret in
-  let%lwt found = Query.select [Users.username] ~from:Users.table
+  let%lwt found = Query.select [Users.id] ~from:Users.table
   |> Query.where Expr.( Users.username = s username )
   |> Query.where Expr.( Users.secret = s (hex_of_string test_hash) )
   |> Request.make_zero_or_one
   |> Petrol.find_opt db in
   match found with
-  | Ok user -> Lwt.return user
-  | Error err -> Lwt.return (Some ((Caqti_error.show err), ()))
+  | Ok id_opt ->
+      begin
+        match id_opt with
+        | Some (id, _) -> Lwt.return (string_of_int id)
+        | None -> Lwt.return ""
+      end
+  | Error err -> Lwt.return (Caqti_error.show err)
 
 (** Creating a user only sets these key fields. Everything else is set dynamically elsewhere. *)
 let create_user username display_name secret db =

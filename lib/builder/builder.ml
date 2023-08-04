@@ -198,7 +198,6 @@ let access_dialog request found_user =
     form ~a:[
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
       a_hx_typed Post ["/authenticate"] ;
-      a_hx_typed Target ["html"] ;
       a_name "access_form" ;
     ] [
       (Dream.csrf_tag request) |> Unsafe.data ;
