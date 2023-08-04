@@ -1,5 +1,11 @@
 open Petrol
 open Petrol.Postgres
+open Cryptokit
+
+let hex_of_string s =
+  let result = Buffer.create (String.length s * 2) in
+  String.iter (fun c -> Printf.bprintf result "%02x" (int_of_char c)) s;
+  Buffer.contents result
 
 (* WHNVR schema version 1.0.0 *)
 let version = VersionedSchema.version [1;0;0]
@@ -18,7 +24,7 @@ module Users = struct
         field "username" ~ty:Type.(character_varying 32) ;
         field "display_name" ~ty:Type.(character_varying 32) ;
         field "expires" ~ty:Type.time ;
-        field "secret" ~ty:Type.text ;
+        field "secret" ~ty:Type.bytea ;
       ]
 end
 
@@ -60,19 +66,19 @@ end
 
 (*
 TODO:
-  - Add a hashed password field to the Users table *shiver*
-  - Add an expires field to the Users table
-  - Modify the login page to submit username back to server
+  X Add a hashed password field to the Users table *shiver*
+  X Add an expires field to the Users table
+  X Modify the login page to submit username back to server
   - - If the username does not exist, create a new user with 60 minute TTL
   - - If the username does exist, prompt the user for their password
   - - Validate provided password
   - - - On failure -> redirect to login
   - - - On success -> set User TTL to 30 days in the future, redirect to feed, and set JWT cookie (HTTP only)
   - Wire post form on Feed page to server
-  - Add expires field to the Posts table (default to 24 hours in the future? maybe?)
+  X Add expires field to the Posts table (default to 24 hours in the future? maybe?)
   - Create DB function create_post
   - - Use info from JWT to set user-level details on new post 
-  - ... profit?
+  - ... profit? (kidding, this is open source)
 *)
 
 let find_user username db =
@@ -87,21 +93,26 @@ let find_user username db =
   | Ok user -> Lwt.return user
   | Error err -> Lwt.return (Some ((Caqti_error.show err), ()))
 
-let new_find_user username db =
-  Query.select ~from:Users.table
-  Expr.[
-    Users.username ;
-  ]
+let authenticate username secret db =
+  let sha3 = Hash.sha3 256 in
+  let test_hash = hash_string sha3 secret in
+  let%lwt found = Query.select [Users.username] ~from:Users.table
   |> Query.where Expr.( Users.username = s username )
+  |> Query.where Expr.( Users.secret = s (hex_of_string test_hash) )
   |> Request.make_zero_or_one
-  |> Petrol.find_opt db
+  |> Petrol.find_opt db in
+  match found with
+  | Ok user -> Lwt.return user
+  | Error err -> Lwt.return (Some ((Caqti_error.show err), ()))
 
 (** Creating a user only sets these key fields. Everything else is set dynamically elsewhere. *)
 let create_user username display_name secret db =
+  let sha3 = Hash.sha3 256 in
+  let hashed = hash_string sha3 secret in
   Query.insert ~table:Users.table ~values:(Expr.[
     Users.username := s username ;
     Users.display_name := s display_name ;
-    Users.secret := s secret ;
+    Users.secret := s (hex_of_string hashed) ;
   ])
   |> Request.make_zero
   |> Petrol.exec db
@@ -116,6 +127,7 @@ let new_fetch_posts db =
   |> Request.make_many
   |> Petrol.collect_list db
   |> Lwt_result.map (List.map HydratedPost.decode)
+
 (* Print the query rather than execute it *)
 let print_new_fetch_posts =
   let users = Query.select [Users.id ; Users.username ; Users.display_name] ~from:Users.table in

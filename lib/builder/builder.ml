@@ -194,16 +194,20 @@ let login_dialog request =
     ] ;
   ]
 
-let access_dialog found_user = 
+let access_dialog request found_user = 
     form ~a:[
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
       a_hx_typed Post ["/authenticate"] ;
+      a_hx_typed Target ["html"] ;
       a_name "access_form" ;
     ] [
+      (Dream.csrf_tag request) |> Unsafe.data ;
       div ~a:[a_class ["p-4" ; "text-green-500"]] [
-        txt (found_user) ;
+        p [
+          txt (found_user) ;
+        ] ;
         input ~a:[
-          a_input_type `Text ;
+          a_input_type `Password ;
           a_class [
             "bg-neutral-700" ;
             "outline-0" ;
@@ -212,7 +216,20 @@ let access_dialog found_user =
             "border-b-solid" ;
             "border-green-500" ;
           ] ;
-          a_name "username"
+          a_name "secret"
+        ] () ;
+        input ~a:[
+          a_input_type `Hidden ;
+          a_class [
+            "bg-neutral-700" ;
+            "outline-0" ;
+            "px-2" ;
+            "border-b" ;
+            "border-b-solid" ;
+            "border-green-500" ;
+          ] ;
+          a_name "username" ;
+          a_value found_user ;
         ] () ;
       ] ;
       div ~a:[a_class ["p-4"]] [
@@ -241,7 +258,7 @@ let enroll_dialog new_name new_secret =
         ]
       ] ;
       div ~a:[a_class ["p-4"]] [
-        input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Continue"] () ;
+        input ~a:[ a_input_type `Button ; a_class button_styles ; a_value "Continue"] () ;
       ] ;
     ]
 
