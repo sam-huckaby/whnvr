@@ -80,11 +80,11 @@ TODO:
   X Add a hashed password field to the Users table *shiver*
   X Add an expires field to the Users table
   X Modify the login page to submit username back to server
-  - - If the username does not exist, create a new user with 60 minute TTL
+  X - If the username does not exist, create a new user with 5 minute TTL
   X - If the username does exist, prompt the user for their password
   X - Validate provided password
-  - - - On failure -> redirect to login
-  - - - On success -> set User TTL to 30 days in the future, redirect to feed, and set JWT cookie (HTTP only)
+  X - - On failure -> redirect to login with error message
+  - - - On success -> set User TTL to 30 days in the future, redirect to feed
   - Wire post form on Feed page to server
   X Add expires field to the Posts table (default to 24 hours in the future? maybe?)
   - Create DB function create_post
@@ -104,6 +104,12 @@ let find_user username db =
   | Ok user -> Lwt.return user
   | Error err -> Lwt.return (Some ((Caqti_error.show err), ()))
 
+let login_time_update = 
+  let new_time = Ptime.of_float_s ((Unix.time ()) +. 2.592e+6) in 
+  match new_time with
+  | Some tm -> tm 
+  | None -> Ptime.epoch
+
 let authenticate username secret db =
   let sha3 = Hash.sha3 256 in
   let test_hash = hash_string sha3 secret in
@@ -116,7 +122,13 @@ let authenticate username secret db =
   | Ok id_opt ->
       begin
         match id_opt with
-        | Some (id, _) -> Lwt.return (Some (string_of_int id))
+        | Some (id, _) -> begin
+          let%lwt _ = Query.update ~set:Expr.[ Users.expires := vl ~ty:Type.time login_time_update ] ~table:Users.table
+        |> Query.where Expr.( Users.id = i id )
+        |> Request.make_zero
+        |> Petrol.exec db in
+          Lwt.return (Some (string_of_int id))
+        end
         | None -> Lwt.return None
       end
   | Error _ -> Lwt.return None

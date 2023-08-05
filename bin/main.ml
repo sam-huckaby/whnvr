@@ -86,7 +86,9 @@ let fragments = [
               let%lwt () = Dream.invalidate_session request in 
               let%lwt () = Dream.set_session_field request "id" id in
               Lwt.return (Dream.response ~headers:[("HX-Redirect", "/")] ~code:200 "Boy-Howdy")
-          | None -> Dream.response (Builder.error_page "Bad payload from the login form") |> Lwt.return
+          | None -> 
+              let%lwt () = Dream.invalidate_session request in 
+              Lwt.return (Dream.response ~headers:[("HX-Redirect", "/login?error=Password%20was%20incorrect")] ~code:404 "Skill Issue")
         end
     | _ -> Dream.response (Builder.error_page "Bad payload from the login form") |> Lwt.return
   ) ;
@@ -107,7 +109,7 @@ let actions = [
 ]
 
 let auth_middleware next request =
-    let unauthed_endpoints = [ "/login" ; "/engage" ; "/authenticate" ] in
+  let unauthed_endpoints = [ "/login" ; "/engage" ; "/authenticate" ; "/login?error=Password%20was%20incorrect" ] in
     let current_target = Dream.target request in
     let no_auth_required = List.exists (String.equal current_target) unauthed_endpoints in
     if no_auth_required then

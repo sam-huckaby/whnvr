@@ -8,7 +8,7 @@ open Tyxml_html
 let compile_html html_obj = Format.asprintf "%a" (Html.pp ()) html_obj
 let compile_elt elt = Format.asprintf "%a" (Tyxml.Html.pp_elt ()) elt
 
-type hx_attr = Boost | Get | Post | On | PushUrl | Select | SelectOob | Swap | SwapOob | Target | Trigger | Vals | Confirm | Delete | Disable | Disinherit | Encoding | Ext | Headers | History | HistoryElt | Include | Indicator | Params | Patch | Preserve | Prompt | Put | ReplaceUrl | Request | Sse | Sync | Validate | Vars | Ws
+type hx_attr = Boost | Get | Post | On | PushUrl | Select | SelectOob | Swap | SwapOob | Target | Trigger | Vals | Confirm | Delete | Disable | Disinherit | Encoding | Ext | Headers | History | HistoryElt | Hx_ | Include | Indicator | Params | Patch | Preserve | Prompt | Put | ReplaceUrl | Request | Sse | Sync | Validate | Vars | Ws
 
 let hx_to_string = function
   | Boost -> "hx-boost" (* Bool *)
@@ -32,6 +32,7 @@ let hx_to_string = function
   | Headers -> "hx-headers"
   | History -> "hx-history"
   | HistoryElt -> "hx-history-elt"
+  | Hx_ -> "_"
   | Include -> "hx-include"
   | Indicator -> "hx-indicator"
   | Params -> "hx-params"
@@ -168,6 +169,7 @@ let error_page message =
   )
 
 let login_dialog request =
+  let error = Dream.query request "error" in
   div ~a:[a_class ["rounded" ; "w-full" ; "h-full" ; "flex" ; "flex-col" ; "items-center" ; "justify-center" ; "p-8"]] [
     form ~a:[
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
@@ -179,6 +181,7 @@ let login_dialog request =
         txt "$ echo " ;
         input ~a:[
           a_input_type `Text ;
+          a_required () ;
           a_class [
             "bg-neutral-700" ;
             "outline-0" ;
@@ -192,10 +195,38 @@ let login_dialog request =
         txt " >> /dev/null" ;
       ] ;
       div ~a:[a_class ["p-4"]] [
-        input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Continue"] () ;
+        input ~a:[
+          a_input_type `Submit ;
+          a_class button_styles ;
+          a_value "Continue" ;
+          a_disabled () ;
+          a_hx_typed Hx_ [
+            "on keyup from closest <form/>" ;
+              "for elt in <*:required/>" ;
+                "if the elt's value.length is less than 5" ;
+                  "add @disabled then exit" ;
+                "end" ;
+              "end" ;
+            "remove @disabled"
+          ]
+        ] () ;
       ] ;
+      match error with
+      | Some err -> p [ txt err ]
+      | None -> p []
     ] ;
   ]
+
+  (*
+"on change from closest <form/> for elt in <[required]/> if the elt's value is empty add @disabled then exit end end remove @disabled"
+on keyup from closest <form/> debounced at 150ms
+            if (<[required]:invalid/>).length > 0
+                add @disabled
+                put 'Check All Fields' into me
+                then exit
+            end
+            remove @disabled put 'Submit' into me
+   *)
 
 let access_dialog request found_user = 
     form ~a:[
@@ -249,18 +280,22 @@ let enroll_dialog new_name new_secret =
     ] [
       div ~a:[a_class ["p-4" ; "text-green-500"]] [
         p [
-          txt "Enroll " ;
-          txt new_name ;
+          txt ("Created user with username '" ^ new_name ^ "'.") ;
         ] ;
         p [
-          txt "Store this secret for later, you will never see it again:" ;
+          txt "Generated password below, which cannot be changed or shown again." ;
+        ] ;
+        p [
+          txt "This user will be deleted in 5 minutes if you do not login." ;
         ] ;
         p [
           txt new_secret ;
         ]
       ] ;
       div ~a:[a_class ["p-4"]] [
-        input ~a:[ a_input_type `Button ; a_class button_styles ; a_value "Continue"] () ;
+        a ~a:[a_href "/login"] [
+          input ~a:[ a_input_type `Button ; a_class button_styles ; a_value "Continue"] () ;
+        ]
       ] ;
     ]
 
@@ -276,8 +311,9 @@ let enroll_dialog new_name new_secret =
 let html_wrapper page_title content =
   html 
     (head (title (txt page_title)) [
-        script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/htmx.org/dist/htmx.min.js")] (txt "");
-        script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "");
+        script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/htmx.org/dist/htmx.min.js")] (txt "") ;
+        script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/hyperscript.org@0.9.11")] (txt "") ;
+        script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "") ;
     ])
     (body ~a:[a_class ["bg-[#18181B]" ; "text-[#DEEAEF]"]] [content])
 
