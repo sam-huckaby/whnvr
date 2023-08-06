@@ -84,7 +84,7 @@ TODO:
   X - If the username does exist, prompt the user for their password
   X - Validate provided password
   X - - On failure -> redirect to login with error message
-  - - - On success -> set User TTL to 30 days in the future, redirect to feed
+  X - - On success -> set User TTL to 30 days in the future, redirect to feed
   - Wire post form on Feed page to server
   X Add expires field to the Posts table (default to 24 hours in the future? maybe?)
   - Create DB function create_post
@@ -104,6 +104,7 @@ let find_user username db =
   | Ok user -> Lwt.return user
   | Error err -> Lwt.return (Some ((Caqti_error.show err), ()))
 
+(** ALL TIME IS IN GMT - BECAUSE IT IS - SO JUST LIKE, DEAL WITH THAT *)
 let login_time_update = 
   let new_time = Ptime.of_float_s ((Unix.time ()) +. 2.592e+6) in 
   match new_time with
@@ -141,6 +142,22 @@ let create_user username display_name secret db =
     Users.username := s username ;
     Users.display_name := s display_name ;
     Users.secret := s (hex_of_string hashed) ;
+  ])
+  |> Request.make_zero
+  |> Petrol.exec db
+
+  (** ALL TIME IS IN GMT - BECAUSE IT IS - SO JUST LIKE, DEAL WITH THAT *)
+let post_ttl = 
+  let new_time = Ptime.of_float_s ((Unix.time ()) +. 86400.0) in 
+  match new_time with
+  | Some tm -> tm 
+  | None -> Ptime.epoch
+
+let create_post message user_id db =
+  Query.insert ~table:Posts.table ~values:(Expr.[
+    Posts.message := s message ;
+    Posts.user_id := i user_id ;
+    Posts.expires := vl ~ty:Type.time post_ttl ;
   ])
   |> Request.make_zero
   |> Petrol.exec db

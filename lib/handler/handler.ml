@@ -14,18 +14,18 @@ let mycontent =
     (Builder.create_fancy_div ()) ;
   ]
 
-let feed_page_template posts =
+let feed_page_template request posts =
   div ~a:[a_class ["w-full"]] [
     div ~a:[a_class ["py-4"]] [
       form ~a:[
           Builder.a_hx_typed Post [Xml.uri_of_string "/posts"] ;
-          Builder.a_hx_typed Trigger ["submit"] ;
           Builder.a_hx_typed Target ["#feed_container"] ;
           Builder.a_hx_typed Swap ["innerHTML"] ;
       ] [
+        (Dream.csrf_tag request) |> Unsafe.data ;
         textarea ~a:[
           a_class ["w-full" ; "h-[100px]" ; "bg-[#1B2631]"] ;
-          a_name "postMessage" ;
+          a_name "message" ;
         ] (txt "") ;
         input ~a:[
           a_class (Builder.button_styles @ ["w-full"]) ;
@@ -65,7 +65,7 @@ let feed_page request =
     Builder.compile_html (
       Builder.html_wrapper
         "Posts Page"
-        (Builder.infinite_template (Builder.left_column ()) (feed_page_template posts) (Builder.right_column ()))
+        (Builder.infinite_template (Builder.left_column ()) (feed_page_template request posts) (Builder.right_column ()))
     ) |> Lwt.return
   | Error (err) -> Builder.error_page (Caqti_error.show err) |> Lwt.return
 

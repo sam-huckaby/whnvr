@@ -95,12 +95,23 @@ let fragments = [
 ]
 
 let actions = [
-  (* One day this will create a new post - maybe *)
   Dream.post "/posts" (fun request ->
-    let%lwt posts = Dream.sql request Database.fetch_posts in
-    match posts with
-    | Ok (posts) -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
-    | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return
+    match%lwt Dream.form request with
+    | `Ok form ->
+        begin
+          let (_, message) = find_list_item form "message" in 
+          match (Dream.session_field request "id") with
+          | Some id ->
+            begin
+              let%lwt _ = Dream.sql request  (Database.create_post message (int_of_string id)) in 
+              let%lwt posts = Dream.sql request Database.fetch_posts in
+              match posts with
+              | Ok (posts) -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
+              | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return 
+            end
+          | None -> Dream.response (Builder.error_page "No user id in the session") |> Lwt.return
+        end
+    | _ -> Dream.response (Builder.error_page "Bad payload from the post form") |> Lwt.return
   ) ;
   Dream.post "/logout" (fun request ->
     let%lwt () = Dream.invalidate_session request in 
