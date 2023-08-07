@@ -63,10 +63,10 @@ module HydratedPost = struct
 
   let decode
       (id,
-       (message,
         (username,
-         (display_name,
-          (created, ()))))) = {
+          (display_name,
+            (message,
+              (created, ()))))) = {
     id = id ;
     message ;
     username ;
@@ -114,21 +114,21 @@ let login_time_update =
 let authenticate username secret db =
   let sha3 = Hash.sha3 256 in
   let test_hash = hash_string sha3 secret in
-  let%lwt found = Query.select [Users.id] ~from:Users.table
+  let%lwt found = Query.select [Users.id ; Users.username] ~from:Users.table
   |> Query.where Expr.( Users.username = s username )
   |> Query.where Expr.( Users.secret = s (hex_of_string test_hash) )
   |> Request.make_zero_or_one
   |> Petrol.find_opt db in
   match found with
-  | Ok id_opt ->
+  | Ok user_opt ->
       begin
-        match id_opt with
-        | Some (id, _) -> begin
+        match user_opt with
+        | Some (id, (username, _)) -> begin
           let%lwt _ = Query.update ~set:Expr.[ Users.expires := vl ~ty:Type.time login_time_update ] ~table:Users.table
         |> Query.where Expr.( Users.id = i id )
         |> Request.make_zero
         |> Petrol.exec db in
-          Lwt.return (Some (string_of_int id))
+          Lwt.return (Some (string_of_int id, username))
         end
         | None -> Lwt.return None
       end

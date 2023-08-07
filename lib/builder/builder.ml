@@ -137,25 +137,24 @@ let list_posts posts =
         posts |> List.rev_map (
           fun (post: Database.HydratedPost.t) -> 
             div ~a:[
-              a_class ["p-4" ; "bg-[#27333F]" ; "text-[#DEEAEF]" ; "rounded-lg" ; "overflow-hidden" ; "shadow-md" ; "w-[500px]"] ;
+              a_class [
+                "flex flex-col" ;
+                "w-full max-w-[700px]" ;
+                "bg-["^Theme.p_600^"]" ;
+                "text-[#DEEAEF]" ;
+                "rounded-lg" ;
+                "overflow-hidden" ;
+                "shadow-md"] ;
               a_id (Int64.to_string post.id)
             ] [
               div ~a:[a_class ["p-4"]] [
-                div ~a:[a_class ["flex items-center"]] [
-                  div ~a:[a_class ["flex-shrink-0"]] [
-                    img ~a:[a_class ["h-12 w-12 rounded-full"]] ~src:"https://picsum.photos/seed/example1/200/200" ~alt:"User Profile Picture" () ;
-                  ] ;
-                  div ~a:[a_class ["ml-4"]] [
-                    h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;
-                    p ~a:[a_class ["text-sm font-medium text-[#DEEAEF]"]] [txt ("@" ^ post.username)]
-                  ]
-                ] ;
-                div ~a:[a_class ["mt-4"]] [
-                  p ~a:[a_class ["text-[#DEEAEF]"]] [txt post.message] ;
-                  div ~a:[a_class ["mt-4"]] [
-                    span ~a:[a_class ["text-[#DEEAEF] text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)]
-                  ]
-                ]
+                p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
+              ] ;
+              div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
+                span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)] ;
+                (* I don't want to handle display names yet, though it is implemented in the DB *)
+                (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
+                p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
               ] ;
             ]
         )
@@ -402,25 +401,26 @@ let left_column () =
     ]
   ]
 
-let right_column () =
+let right_column username =
   div ~a:[a_class ["h-full" ; "flex" ; "flex-col" ; "justify-between" ; "px-8" ]] [
     div ~a:[a_class ["flex" ; "flex-col" ; "items-center" ; "pt-4"]] [
-      h1 ~a:[a_class ["text-4xl" ; "text-white"]] [ txt "WHNVR"] ;
+      h1 ~a:[a_class ["text-6xl" ; "text-white"]] [ txt "WHNVR"] ;
       div ~a:[a_class [
         "w-[300px] h-[300px]" ;
         "mt-4 mb-4" ;
         "rounded-full" ;
         "bg-["^Theme.p_950^"]" ;
-        "flex flex-row justify-center items-center"
+        "flex flex-row justify-center items-center" ;
+        "text-4xl" ;
       ]] [
-        txt "Username"
+        txt username
       ] ;
       (txt "FILTERS GO HERE") ;
     ] ;
     div ~a:[a_class ["pb-4" ; "flex flex-col items-center"]] [
       input ~a:[ a_input_type `Button ; a_class (button_styles @ ["w-[300px]"]) ; a_hx_typed Post ["/logout"] ; a_value "Logout"] () ;
     ]  
-]
+  ]
 
 (*
 Not sure why I want all these yet... But I do.

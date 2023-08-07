@@ -80,11 +80,12 @@ let fragments = [
         begin
           let (_, username) = find_list_item form "username" in 
           let (_, secret) = find_list_item form "secret" in 
-          let%lwt found_id = Dream.sql request (Database.authenticate username secret) in
-          match found_id with
-          | Some id ->
+          let%lwt found_user = Dream.sql request (Database.authenticate username secret) in
+          match found_user with
+          | Some (id, username) ->
               let%lwt () = Dream.invalidate_session request in 
               let%lwt () = Dream.set_session_field request "id" id in
+              let%lwt () = Dream.set_session_field request "username" username in
               Lwt.return (Dream.response ~headers:[("HX-Redirect", "/")] ~code:200 "Boy-Howdy")
           | None -> 
               let%lwt () = Dream.invalidate_session request in 

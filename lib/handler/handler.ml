@@ -15,8 +15,8 @@ let mycontent =
   ]
 
 let feed_page_template request posts =
-  div ~a:[a_class ["w-full"]] [
-    div ~a:[a_class ["py-4"]] [
+  div ~a:[a_class ["flex flex-col" ; "w-full" ; "items-center"]] [
+    div ~a:[a_class ["py-4" ; "w-full" ; "max-w-[700px]"]] [
       form ~a:[
           Builder.a_hx_typed Post [Xml.uri_of_string "/posts"] ;
           Builder.a_hx_typed Target ["#feed_container"] ;
@@ -62,11 +62,16 @@ let feed_page request =
   let%lwt posts = Dream.sql request Database.fetch_posts in
   match posts with
   | Ok (posts) ->
-    Builder.compile_html (
-      Builder.html_wrapper
-        "Posts Page"
-        (Builder.standard_template (feed_page_template request posts) (Builder.right_column ()))
-    ) |> Lwt.return
+      begin
+        match (Dream.session_field request "username") with
+        | Some username ->
+            Builder.compile_html (
+            Builder.html_wrapper
+              "Posts Page"
+              (Builder.standard_template (feed_page_template request posts) (Builder.right_column username))
+          ) |> Lwt.return
+        | None -> Builder.error_page "No Username Found" |> Lwt.return
+      end
   | Error (err) -> Builder.error_page (Caqti_error.show err) |> Lwt.return
 
 (* The page types that are available, so that a non-existant page cannot be specified *)
