@@ -75,23 +75,6 @@ module HydratedPost = struct
   }
 end
 
-(*
-TODO:
-  X Add a hashed password field to the Users table *shiver*
-  X Add an expires field to the Users table
-  X Modify the login page to submit username back to server
-  X - If the username does not exist, create a new user with 5 minute TTL
-  X - If the username does exist, prompt the user for their password
-  X - Validate provided password
-  X - - On failure -> redirect to login with error message
-  X - - On success -> set User TTL to 30 days in the future, redirect to feed
-  X Wire post form on Feed page to server
-  X Add expires field to the Posts table (default to 24 hours in the future? maybe?)
-  X Create DB function create_post
-  X - Use info from session to set user-level details on new post 
-  O ... profit? (kidding, this is open source)
-*)
-
 let find_user username db =
   let%lwt found = Query.select ~from:Users.table
   Expr.[
