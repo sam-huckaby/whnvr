@@ -24,7 +24,7 @@ let feed_page_template request posts =
       ] [
         (Dream.csrf_tag request) |> Unsafe.data ;
         textarea ~a:[
-          a_class ["w-full" ; "h-[100px]" ; "bg-[#1B2631]"] ;
+          a_class ["w-full" ; "h-[100px]" ; "bg-["^Builder.Theme.p_700^"]"] ;
           a_name "message" ;
         ] (txt "") ;
         input ~a:[
@@ -65,7 +65,7 @@ let feed_page request =
     Builder.compile_html (
       Builder.html_wrapper
         "Posts Page"
-        (Builder.infinite_template (Builder.left_column ()) (feed_page_template request posts) (Builder.right_column ()))
+        (Builder.standard_template (feed_page_template request posts) (Builder.right_column ()))
     ) |> Lwt.return
   | Error (err) -> Builder.error_page (Caqti_error.show err) |> Lwt.return
 

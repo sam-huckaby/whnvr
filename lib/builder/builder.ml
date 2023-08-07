@@ -98,8 +98,24 @@ let create_fancy_div () =
     a_hx_typed Target ["this"]
   ] [txt "This is a FANCY div"]
 
+module Theme = struct
+  let primary = "#344009"
+  
+  let p_50 = "#f2f7f9"
+  let p_100 = "#deeaef"
+  let p_200 = "#c0d5e1"
+  let p_300 = "#95b9cb"
+  let p_400 = "#6293ae" (* Probably don't use these much at all *)
+  let p_500 = "#477793" (* Probably don't use these much at all *)
+  let p_600 = "#3e627c" (* Probably don't use these much at all *)
+  let p_700 = "#375267"
+  let p_800 = "#334657"
+  let p_900 = "#27333f"
+  let p_950 = "#1b2631"
+end
+
 let button_styles =
-  ["border" ; "rounded" ; "border-[#95B9CB]" ; "text-[#95B9CB]" ; "hover:bg-[#1B2631]" ; "cursor-pointer" ; "px-4" ; "py-2"]
+  ["border" ; "rounded" ; "border-["^Theme.p_300^"]" ; "text-["^Theme.p_300^"]" ; "hover:bg-["^Theme.p_950^"]" ; "cursor-pointer" ; "px-4" ; "py-2"]
 let submit =
     Html.[input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Submit"] () ]
 
@@ -366,6 +382,19 @@ let infinite_template left_content middle_content right_content =
     div ~a:[a_class ["flex" ; "flex-col" ; "grow"]] [right_content] ;
   ]
 
+let standard_template main_content right_panel_content =
+  div ~a:[a_class ["bg-["^Theme.p_800^"]" ; "flex" ; "flex-row" ; "h-screen" ; "overflow-hidden"]] [
+    div ~a:[a_class ["p-4" ; "grow" ; "overflow-auto"]] [main_content] ;
+    div ~a:[a_class [
+      "bg-["^Theme.p_900^"]" ;
+      "w-[400px]" ;
+      "h-screen" ;
+      "shadow-[-5px_0px_5px_rgba(0,0,0,0.2)]" ;
+      "border-l" ;
+      "border-["^Theme.p_950^"]"
+    ]] [right_panel_content] ;
+  ]
+
 let left_column () =
   div ~a:[a_class ["flex" ; "flex-col" ; "px-8"]] [
     div ~a:[a_class ["flex" ; "flex-row" ]] [
@@ -374,10 +403,24 @@ let left_column () =
   ]
 
 let right_column () =
-  div ~a:[a_class ["flex" ; "flex-col" ; "px-8" ]] [
-    input ~a:[ a_input_type `Button ; a_class button_styles ; a_hx_typed Post ["/logout"] ; a_value "Logout"] () ;
-    (txt "FILTERS GO HERE") ;
-  ]
+  div ~a:[a_class ["h-full" ; "flex" ; "flex-col" ; "justify-between" ; "px-8" ]] [
+    div ~a:[a_class ["flex" ; "flex-col" ; "items-center" ; "pt-4"]] [
+      h1 ~a:[a_class ["text-4xl" ; "text-white"]] [ txt "WHNVR"] ;
+      div ~a:[a_class [
+        "w-[300px] h-[300px]" ;
+        "mt-4 mb-4" ;
+        "rounded-full" ;
+        "bg-["^Theme.p_950^"]" ;
+        "flex flex-row justify-center items-center"
+      ]] [
+        txt "Username"
+      ] ;
+      (txt "FILTERS GO HERE") ;
+    ] ;
+    div ~a:[a_class ["pb-4" ; "flex flex-col items-center"]] [
+      input ~a:[ a_input_type `Button ; a_class (button_styles @ ["w-[300px]"]) ; a_hx_typed Post ["/logout"] ; a_value "Logout"] () ;
+    ]  
+]
 
 (*
 Not sure why I want all these yet... But I do.
