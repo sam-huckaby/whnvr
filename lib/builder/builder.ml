@@ -398,7 +398,7 @@ let standard_template main_content right_panel_content =
 let left_column () =
   div ~a:[a_class ["flex" ; "flex-col" ; "px-8"]] [
     div ~a:[a_class ["flex" ; "flex-row" ]] [
-      (txt "WHNVR >> /dev/null")
+      (txt "/dev/null >> WHNVR")
     ]
   ]
 
