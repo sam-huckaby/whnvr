@@ -185,14 +185,20 @@ let error_page message =
 
 let login_dialog request =
   let error = Dream.query request "error" in
-  div ~a:[a_class ["rounded" ; "w-full" ; "h-full" ; "flex" ; "flex-col" ; "items-center" ; "justify-center" ; "p-8"]] [
+  div ~a:[a_class [
+    "rounded" ;
+    "w-full h-full" ;
+    "flex flex-col items-center justify-center" ;
+    "p-8"
+  ]] [
     form ~a:[
-      a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
+      a_class ["flex flex-col justify-center items-center"] ;
       a_hx_typed Post ["/engage"] ;
       a_name "login_form" ;
     ] [
       (Dream.csrf_tag request) |> Unsafe.data ;
-      div ~a:[a_class ["p-4" ; "text-green-500"]] [
+      h1 ~a:[a_class ["text-4xl text-white"]] [txt "WHNVR"] ;
+      div ~a:[a_class ["p-4" ; "text-["^Theme.p_100^"]"]] [
         txt "$ echo " ;
         input ~a:[
           a_input_type `Text ;
@@ -203,7 +209,7 @@ let login_dialog request =
             "px-2" ;
             "border-b" ;
             "border-b-solid" ;
-            "border-green-500" ;
+            "border-["^Theme.p_100^"]" ;
           ] ;
           a_name "username"
         ] () ;
@@ -232,17 +238,6 @@ let login_dialog request =
     ] ;
   ]
 
-  (*
-"on change from closest <form/> for elt in <[required]/> if the elt's value is empty add @disabled then exit end end remove @disabled"
-on keyup from closest <form/> debounced at 150ms
-            if (<[required]:invalid/>).length > 0
-                add @disabled
-                put 'Check All Fields' into me
-                then exit
-            end
-            remove @disabled put 'Submit' into me
-   *)
-
 let access_dialog request found_user = 
     form ~a:[
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
@@ -250,7 +245,7 @@ let access_dialog request found_user =
       a_name "access_form" ;
     ] [
       (Dream.csrf_tag request) |> Unsafe.data ;
-      div ~a:[a_class ["p-4" ; "text-green-500"]] [
+      div ~a:[a_class ["p-4" ; "text-["^Theme.p_100^"]"]] [
         p [
           txt (found_user) ;
         ] ;
@@ -262,7 +257,7 @@ let access_dialog request found_user =
             "px-2" ;
             "border-b" ;
             "border-b-solid" ;
-            "border-green-500" ;
+            "border-["^Theme.p_100^"]" ;
           ] ;
           a_name "secret"
         ] () ;
@@ -272,9 +267,6 @@ let access_dialog request found_user =
             "bg-neutral-700" ;
             "outline-0" ;
             "px-2" ;
-            "border-b" ;
-            "border-b-solid" ;
-            "border-green-500" ;
           ] ;
           a_name "username" ;
           a_value found_user ;
@@ -293,7 +285,7 @@ let enroll_dialog new_name new_secret =
     div ~a:[
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
     ] [
-      div ~a:[a_class ["p-4" ; "text-green-500"]] [
+      div ~a:[a_class ["p-4" ; "text-["^Theme.p_100^"]"]] [
         p [
           txt ("Created user with username '" ^ new_name ^ "'.") ;
         ] ;
@@ -330,7 +322,7 @@ let html_wrapper page_title content =
         script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/hyperscript.org@0.9.11")] (txt "") ;
         script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "") ;
     ])
-    (body ~a:[a_class ["bg-[#18181B]" ; "text-[#DEEAEF]"]] [content])
+    (body ~a:[a_class ["bg-["^Theme.p_950^"]" ; "text-["^Theme.p_100^"]"]] [content])
 
 (*********************************************************************************************)
 (*                                    content_template                                       *)
@@ -360,7 +352,10 @@ let content_template header content =
 (*********************************************************************************************)
 let centered_template content =
   div ~a:[a_class ["absolute" ; "flex" ; "flex-col" ; "justify-center" ; "items-center" ; "h-full" ; "w-full"]] [
-    div ~a:[a_class ["bg-neutral-800" ; "rounded" ; "border" ; "border-solid" ; "border-green-500" ; "h-[300px]" ; "w-[600px]"]] [content] ;
+    div ~a:[a_class [
+      "bg-["^Theme.p_900^"]" ;
+      "rounded border border-solid border-["^Theme.p_300^"]" ;
+      "h-[300px] w-[600px]"]] [content] ;
   ]
 
 (*********************************************************************************************)
@@ -415,7 +410,6 @@ let right_column username =
       ]] [
         txt username
       ] ;
-      (txt "FILTERS GO HERE") ;
     ] ;
     div ~a:[a_class ["pb-4" ; "flex flex-col items-center"]] [
       input ~a:[ a_input_type `Button ; a_class (button_styles @ ["w-[300px]"]) ; a_hx_typed Post ["/logout"] ; a_value "Logout"] () ;

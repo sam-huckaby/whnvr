@@ -144,7 +144,8 @@ let () =
   @@ Dream.logger
   (* TODO: Make the rest of this connection string configurable *)
   @@ Dream.sql_pool ("postgresql://dream:" ^ db_password ^ "@localhost:5432/whnvr")
-  @@ Dream.sql_sessions
+  (* Sessions last exactly as long as a user does, if a user has not logged in after this period they are deleted *)
+  @@ Dream.sql_sessions ~lifetime:2.592e+6
   @@ auth_middleware
   @@ Dream.router (
     pages @

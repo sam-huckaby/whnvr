@@ -21,10 +21,15 @@ let feed_page_template request posts =
           Builder.a_hx_typed Post [Xml.uri_of_string "/posts"] ;
           Builder.a_hx_typed Target ["#feed_container"] ;
           Builder.a_hx_typed Swap ["innerHTML"] ;
+          Builder.a_hx_typed Hx_ ["on htmx:afterRequest reset() me"]
       ] [
         (Dream.csrf_tag request) |> Unsafe.data ;
         textarea ~a:[
-          a_class ["w-full" ; "h-[100px]" ; "bg-["^Builder.Theme.p_700^"]"] ;
+          a_class [
+            "w-full h-[100px]" ;
+            "bg-["^Builder.Theme.p_700^"]" ;
+            "p-2" ;
+          ] ;
           a_name "message" ;
         ] (txt "") ;
         input ~a:[

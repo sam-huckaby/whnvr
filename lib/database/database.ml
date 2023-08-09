@@ -164,6 +164,47 @@ let print_new_fetch_posts =
   Query.join ~op:INNER ~on users posts
   |> Format.asprintf "%a" Query.pp;;
 
+(* Paginating is probably best done by leveraging post IDs:
+  - Page 1: Get all posts LIMIT 100
+  - Page 2: Get all posts WHERE ID > 100th post ID, LIMIT 100
+  - Page 3: Get all posts WHERE ID > 200th post ID, LIMIT 100
+  *)
+
+(* This is a query which utilizes a workaround in Petrol with aliased fields for the join *)
+let paginated_posts last_post_id db direction =
+  let user_id, user_id_ref = Expr.as_ Users.id ~name:"joined_user_id" in
+  let username, username_ref = Expr.as_ Users.username ~name:"username" in
+  let display_name, display_name_ref = Expr.as_ Users.display_name ~name:"display_name" in
+  Query.select 
+    ~from:Posts.table 
+    Expr.[
+      Posts.id ;
+      username_ref ;
+      display_name_ref ;
+      Posts.message ;
+      Posts.created ;
+    ]
+  |> Query.join
+    ~on:Expr.(Posts.user_id = user_id_ref)
+    (
+      Query.select
+      ~from:Users.table
+      Expr.[
+        user_id ;
+        username ;
+        display_name ;
+      ] 
+    )
+  |> Query.where Expr.(Posts.id > Expr.(vl ~ty:Type.big_int last_post_id))
+  |> Query.order_by ~direction Posts.id
+  |> Query.limit Expr.(i 10) (* TODO: Up to 100 after testing *)
+  |> Request.make_many
+  |> Petrol.collect_list db
+  |> Lwt_result.map (List.map HydratedPost.decode)
+
+let last_posts_page post_id db = paginated_posts post_id db Query.(`ASC)
+let next_posts_page post_id db = paginated_posts post_id db Query.(`DESC)
+
 (* This is a query which utilizes a workaround in Petrol with aliased fields for the join *)
 let fetch_posts db =
   let user_id, user_id_ref = Expr.as_ Users.id ~name:"joined_user_id" in
@@ -192,6 +233,7 @@ let fetch_posts db =
   |> Request.make_many
   |> Petrol.collect_list db
   |> Lwt_result.map (List.map HydratedPost.decode)
+
 (* Print the query rather than execute it *)
 let print_fetch_posts =
   let user_id, user_id_ref = Expr.as_ Users.id ~name:"user_id" in
