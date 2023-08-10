@@ -42,6 +42,12 @@ let feed_page_template request posts =
     div ~a:[
       a_id "feed_container"
     ] [
+      div ~a:[
+        a_class ["flex flex-col items-center gap-4"] ;
+        Builder.a_hx "get" ["/posts"] ;
+        Builder.a_hx "swap" ["innerHTML"] ;
+        a_id "posts_container" ;
+      ]
       (Builder.list_posts posts) ;
     ]
   ]

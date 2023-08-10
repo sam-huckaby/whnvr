@@ -7,6 +7,7 @@ open Tyxml_html
 
 let compile_html html_obj = Format.asprintf "%a" (Html.pp ()) html_obj
 let compile_elt elt = Format.asprintf "%a" (Tyxml.Html.pp_elt ()) elt
+let compile_elt_list elt = List.fold_left (fun acc s -> acc ^ s) "" (List.map (fun x -> Format.asprintf "%a" (Tyxml.Html.pp_elt ()) x) elt)
 
 type hx_attr = Boost | Get | Post | On | PushUrl | Select | SelectOob | Swap | SwapOob | Target | Trigger | Vals | Confirm | Delete | Disable | Disinherit | Encoding | Ext | Headers | History | HistoryElt | Hx_ | Include | Indicator | Params | Patch | Preserve | Prompt | Put | ReplaceUrl | Request | Sse | Sync | Validate | Vars | Ws
 
@@ -127,38 +128,30 @@ let submit =
 (* I need to modify this to assign id attributes to everything, so that the screen doesn't flicker *)
 (* TODO: Clean up the database types. Should they be imported here at all? *)
 let list_posts posts =
+  posts |> List.rev_map (
+    fun (post: Database.HydratedPost.t) -> 
       div ~a:[
-        a_class ["flex flex-col items-center gap-4"] ;
-        a_hx "get" ["/posts"] ;
-        a_hx "swap" ["outerHTML"] ;
-        a_hx "trigger" ["every 59s"] ;
-        a_id "posts_container" ;
-      ] (
-        posts |> List.rev_map (
-          fun (post: Database.HydratedPost.t) -> 
-            div ~a:[
-              a_class [
-                "flex flex-col" ;
-                "w-full max-w-[700px]" ;
-                "bg-["^Theme.p_600^"]" ;
-                "text-[#DEEAEF]" ;
-                "rounded-lg" ;
-                "overflow-hidden" ;
-                "shadow-md"] ;
-              a_id (Int64.to_string post.id)
-            ] [
-              div ~a:[a_class ["p-4"]] [
-                p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
-              ] ;
-              div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
-                span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)] ;
-                (* I don't want to handle display names yet, though it is implemented in the DB *)
-                (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
-                p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
-              ] ;
-            ]
-        )
-      )
+        a_class [
+          "flex flex-col" ;
+          "w-full max-w-[700px]" ;
+          "bg-["^Theme.p_600^"]" ;
+          "text-[#DEEAEF]" ;
+          "rounded-lg" ;
+          "overflow-hidden" ;
+          "shadow-md"] ;
+        a_id (Int64.to_string post.id)
+      ] [
+        div ~a:[a_class ["p-4"]] [
+          p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
+        ] ;
+        div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
+          span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)] ;
+          (* I don't want to handle display names yet, though it is implemented in the DB *)
+          (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
+          p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
+        ] ;
+      ]
+  )
 
 let error_page message =
   compile_html (

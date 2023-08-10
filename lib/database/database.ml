@@ -202,9 +202,6 @@ let paginated_posts last_post_id db direction =
   |> Petrol.collect_list db
   |> Lwt_result.map (List.map HydratedPost.decode)
 
-let last_posts_page post_id db = paginated_posts post_id db Query.(`ASC)
-let next_posts_page post_id db = paginated_posts post_id db Query.(`DESC)
-
 (* This is a query which utilizes a workaround in Petrol with aliased fields for the join *)
 let fetch_posts db =
   let user_id, user_id_ref = Expr.as_ Users.id ~name:"joined_user_id" in
@@ -233,6 +230,14 @@ let fetch_posts db =
   |> Request.make_many
   |> Petrol.collect_list db
   |> Lwt_result.map (List.map HydratedPost.decode)
+
+let last_posts_page post_id db = paginated_posts post_id db `ASC
+let next_posts_page post_id db = paginated_posts post_id db `DESC
+
+let get_posts next_id db =
+  match next_id with
+  | Some id -> next_posts_page (Int64.of_string id) db
+  | None -> fetch_posts db
 
 (* Print the query rather than execute it *)
 let print_fetch_posts =

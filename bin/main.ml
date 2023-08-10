@@ -42,9 +42,10 @@ let pages = [
 (* The below "fragments" are page pieces that can be hot swapped out with htmx *)
 let fragments = [
   Dream.get "/posts" (fun request ->
-    let%lwt posts = Dream.sql request Database.fetch_posts in
+    let after_id = Dream.query request "after" in 
+    let%lwt posts = Dream.sql request (Database.get_posts after_id) in
     match posts with
-    | Ok (posts) -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
+    | Ok (posts) -> Dream.html (Builder.compile_elt_list (Builder.list_posts posts))
     | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return
   ) ;
 
@@ -107,7 +108,7 @@ let actions = [
               let%lwt _ = Dream.sql request  (Database.create_post message (int_of_string id)) in 
               let%lwt posts = Dream.sql request Database.fetch_posts in
               match posts with
-              | Ok (posts) -> Dream.html (Builder.compile_elt (Builder.list_posts posts))
+              | Ok (posts) -> Dream.html (Builder.compile_elt_list (Builder.list_posts posts))
               | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return 
             end
           | None -> Dream.response (Builder.error_page "No user id in the session") |> Lwt.return
