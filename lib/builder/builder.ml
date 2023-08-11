@@ -319,9 +319,10 @@ let access_dialog request found_user =
       a_name "access_form" ;
     ] [
       (Dream.csrf_tag request) |> Unsafe.data ;
+      h1 ~a:[a_class ["text-4xl text-white"]] [txt "WHNVR"] ;
       div ~a:[a_class ["p-4" ; "text-["^Theme.p_100^"]"]] [
-        p [
-          txt (found_user) ;
+        p ~a:[a_class ["text-center"]] [
+          txt ("Enter " ^ found_user ^ "'s passphrase") ;
         ] ;
         input ~a:[
           a_input_type `Password ;
@@ -359,17 +360,18 @@ let enroll_dialog new_name new_secret =
     div ~a:[
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
     ] [
+      h1 ~a:[a_class ["text-4xl text-white"]] [txt "WHNVR"] ;
       div ~a:[a_class ["p-4" ; "text-["^Theme.p_100^"]"]] [
-        p [
-          txt ("Created user with username '" ^ new_name ^ "'.") ;
+        p ~a:[a_class ["mb-2"]] [
+          txt ("Created user '" ^ new_name ^ "'!") ;
         ] ;
-        p [
-          txt "Generated password below, which cannot be changed or shown again." ;
+        p ~a:[a_class ["underline"]] [
+          txt "Note the below passphrase, you will not have access to it again." ;
         ] ;
-        p [
-          txt "This user will be deleted in 5 minutes if you do not login." ;
+        p ~a:[a_class ["mt-2"]] [
+          txt "This user will self-destruct in 5 minutes if it does not login." ;
         ] ;
-        p [
+        p ~a:[a_class ["text-center" ; "p-4" ; "bg-["^Theme.p_800^"]"]] [
           txt new_secret ;
         ]
       ] ;

@@ -28,11 +28,6 @@ let pages = [
     Dream.html page
   ) ;
 
-  Dream.get "/login" (fun request ->
-    let%lwt page = (Handler.generate_page Login request) in
-    Dream.html page
-  ) ;
-
   Dream.get "/hello" (fun request ->
     let%lwt page = (Handler.generate_page Hello request) in
     Dream.html page
@@ -51,6 +46,40 @@ let fragments = [
 
   Dream.get "/colorize" (fun _ ->
     Dream.html (Builder.compile_elt (Builder.create_fancy_div ()))
+  ) ;
+
+]
+
+let actions = [
+  Dream.post "/posts" (fun request ->
+    match%lwt Dream.form request with
+    | `Ok form ->
+        begin
+          let (_, message) = find_list_item form "message" in 
+          match (Dream.session_field request "id") with
+          | Some id ->
+            begin
+              let%lwt _ = Dream.sql request  (Database.create_post message (int_of_string id)) in 
+              let%lwt posts = Dream.sql request Database.fetch_posts in
+              match posts with
+              | Ok (posts) -> Dream.html (Builder.compile_elt_list (Builder.list_posts posts))
+              | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return 
+            end
+          | None -> Dream.response (Builder.error_page "No user id in the session") |> Lwt.return
+        end
+    | _ -> Dream.response (Builder.error_page "Bad payload from the post form") |> Lwt.return
+  ) ;
+  Dream.post "/logout" (fun request ->
+    let%lwt () = Dream.invalidate_session request in 
+    Lwt.return (Dream.response ~headers:[("HX-Redirect", "/")] ~code:200 "Logged out!")
+  )
+]
+
+(** The routes below are not protected by the auth middleware *)
+let no_auth_routes = [
+  Dream.get "/login" (fun request ->
+    let%lwt page = (Handler.generate_page Login request) in
+    Dream.html page
   ) ;
 
   (** Handle a login attempt by either creating an account or requesting a password *)
@@ -90,44 +119,13 @@ let fragments = [
               Lwt.return (Dream.response ~headers:[("HX-Redirect", "/")] ~code:200 "Boy-Howdy")
           | None -> 
               let%lwt () = Dream.invalidate_session request in 
-              Lwt.return (Dream.response ~headers:[("HX-Redirect", "/login?error=Password%20was%20incorrect")] ~code:404 "Skill Issue")
+              Lwt.return (Dream.response ~headers:[("HX-Redirect", "/login?error=Passphrase%20was%20incorrect")] ~code:404 "Skill Issue")
         end
     | _ -> Dream.response (Builder.error_page "Bad payload from the login form") |> Lwt.return
   ) ;
 ]
 
-let actions = [
-  Dream.post "/posts" (fun request ->
-    match%lwt Dream.form request with
-    | `Ok form ->
-        begin
-          let (_, message) = find_list_item form "message" in 
-          match (Dream.session_field request "id") with
-          | Some id ->
-            begin
-              let%lwt _ = Dream.sql request  (Database.create_post message (int_of_string id)) in 
-              let%lwt posts = Dream.sql request Database.fetch_posts in
-              match posts with
-              | Ok (posts) -> Dream.html (Builder.compile_elt_list (Builder.list_posts posts))
-              | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return 
-            end
-          | None -> Dream.response (Builder.error_page "No user id in the session") |> Lwt.return
-        end
-    | _ -> Dream.response (Builder.error_page "Bad payload from the post form") |> Lwt.return
-  ) ;
-  Dream.post "/logout" (fun request ->
-    let%lwt () = Dream.invalidate_session request in 
-    Lwt.return (Dream.response ~headers:[("HX-Redirect", "/")] ~code:200 "Logged out!")
-  )
-]
-
 let auth_middleware next request =
-  let unauthed_endpoints = [ "/login" ; "/engage" ; "/authenticate" ; "/login?error=Password%20was%20incorrect" ] in
-    let current_target = Dream.target request in
-    let no_auth_required = List.exists (String.equal current_target) unauthed_endpoints in
-    if no_auth_required then
-      next request
-    else
       match Dream.session_field request "id" with
       | None ->
           (* Invalidate this session, to prevent session fixation attacks *)
@@ -147,12 +145,12 @@ let () =
   @@ Dream.sql_pool ("postgresql://dream:" ^ db_password ^ "@localhost:5432/whnvr")
   (* Sessions last exactly as long as a user does, if a user has not logged in after this period they are deleted *)
   @@ Dream.sql_sessions ~lifetime:2.592e+6
-  @@ auth_middleware
   @@ Dream.router (
-    pages @
-    fragments @
-    actions @
     [
+      Dream.scope "/" [] no_auth_routes ;
+      Dream.scope "/" [auth_middleware] pages ;
+      Dream.scope "/" [auth_middleware] fragments ;
+      Dream.scope "/" [auth_middleware] actions ;
       (* Serve any static content we may need, maybe stylesheets? *)
       (* This local_directory path is relative to the location the app is run from *)
       Dream.get "/static/**" @@ Dream.static "www/static" ;
