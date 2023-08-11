@@ -13,6 +13,9 @@ let version = VersionedSchema.version [1;0;0]
 (* init the schema using the above version *)
 let schema = VersionedSchema.init version ~name:"whnvr"
 
+(** Configurable page size for infinite scroll *)
+let page_size = 10
+
 (* TODO: Move individual table modules into separate files *)
 
 module Dream_Session = struct
@@ -145,25 +148,6 @@ let create_post message user_id db =
   |> Request.make_zero
   |> Petrol.exec db
 
-(* This is a possible version of query with join that will hopefully be possible to use in the future *)
-(* THIS DOES NOT WORK YET, AS OF JULY 30, 2023 *)
-let new_fetch_posts db =
-  let users = Query.select [Users.id ; Users.username ; Users.display_name] ~from:Users.table in
-  let posts = Query.select [Posts.id ; Posts.message ; Users.username ; Users.display_name ; Posts.created] ~from:Posts.table in
-  let on = Expr.(Users.id = Posts.user_id) in
-  Query.join ~op:INNER ~on users posts
-  |> Request.make_many
-  |> Petrol.collect_list db
-  |> Lwt_result.map (List.map HydratedPost.decode)
-
-(* Print the query rather than execute it *)
-let print_new_fetch_posts =
-  let users = Query.select [Users.id ; Users.username ; Users.display_name] ~from:Users.table in
-  let posts = Query.select [Posts.id ; Posts.message ; Users.username ; Users.display_name ; Posts.created] ~from:Posts.table in
-  let on = Expr.(Users.id = Posts.user_id) in
-  Query.join ~op:INNER ~on users posts
-  |> Format.asprintf "%a" Query.pp;;
-
 (* Paginating is probably best done by leveraging post IDs:
   - Page 1: Get all posts LIMIT 100
   - Page 2: Get all posts WHERE ID > 100th post ID, LIMIT 100
@@ -195,9 +179,9 @@ let paginated_posts last_post_id db direction =
         display_name ;
       ] 
     )
-  |> Query.where Expr.(Posts.id > Expr.(vl ~ty:Type.big_int last_post_id))
+  |> Query.where Expr.(Posts.id < Expr.(vl ~ty:Type.big_int last_post_id))
   |> Query.order_by ~direction Posts.id
-  |> Query.limit Expr.(i 10) (* TODO: Up to 100 after testing *)
+  |> Query.limit Expr.(i page_size) (* TODO: Up to 100 after testing *)
   |> Request.make_many
   |> Petrol.collect_list db
   |> Lwt_result.map (List.map HydratedPost.decode)
@@ -227,6 +211,8 @@ let fetch_posts db =
         display_name ;
       ] 
     )
+  |> Query.limit Expr.(i page_size) (* TODO: Up to 100 after testing *)
+  |> Query.order_by Posts.id ~direction:`DESC
   |> Request.make_many
   |> Petrol.collect_list db
   |> Lwt_result.map (List.map HydratedPost.decode)
@@ -241,7 +227,7 @@ let get_posts next_id db =
 
 (* Print the query rather than execute it *)
 let print_fetch_posts =
-  let user_id, user_id_ref = Expr.as_ Users.id ~name:"user_id" in
+  let user_id, user_id_ref = Expr.as_ Users.id ~name:"joined_user_id" in
   let username, username_ref = Expr.as_ Users.username ~name:"username" in
   let display_name, display_name_ref = Expr.as_ Users.display_name ~name:"display_name" in
   Query.select 
@@ -256,7 +242,7 @@ let print_fetch_posts =
   |> Query.join
     ~on:Expr.(Posts.user_id = user_id_ref)
     (
-      Query.select 
+      Query.select
       ~from:Users.table
       Expr.[
         user_id ;
@@ -264,6 +250,8 @@ let print_fetch_posts =
         display_name ;
       ] 
     )
+  |> Query.limit Expr.(i 10) (* TODO: Up to 100 after testing *)
+  |> Query.order_by Posts.id ~direction:`DESC
   |> Format.asprintf "%a" Query.pp
 
 (** Initialize the database and run any migrations that might need to be applied still *)    

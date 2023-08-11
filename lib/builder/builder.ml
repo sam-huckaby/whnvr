@@ -120,38 +120,119 @@ let button_styles =
 let submit =
     Html.[input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Submit"] () ]
 
+let transform_posts posts =
+    posts |> List.map (
+      fun (post: Database.HydratedPost.t) -> 
+        div ~a:[
+          a_class [
+            "flex flex-col" ;
+            "w-full max-w-[700px]" ;
+            "bg-["^Theme.p_600^"]" ;
+            "text-[#DEEAEF]" ;
+            "rounded-lg" ;
+            "overflow-hidden" ;
+            "shadow-md"
+          ] ;
+          a_id (Int64.to_string post.id)
+        ] [
+          div ~a:[a_class ["p-4"]] [
+            p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
+          ] ;
+          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
+            span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)] ;
+            (* I don't want to handle display names yet, though it is implemented in the DB *)
+            (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
+            p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
+          ] ;
+        ]
+    )
+
+let construct_post (post: Database.HydratedPost.t) =
+        div ~a:[
+          a_class [
+            "flex flex-col" ;
+            "w-full max-w-[700px]" ;
+            "bg-["^Theme.p_600^"]" ;
+            "text-[#DEEAEF]" ;
+            "rounded-lg" ;
+            "overflow-hidden" ;
+            "shadow-md"
+          ] ;
+          a_id ("post_" ^ (Int64.to_string post.id))
+        ] [
+          div ~a:[a_class ["p-4"]] [
+            p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
+          ] ;
+          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
+            span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)] ;
+            (* I don't want to handle display names yet, though it is implemented in the DB *)
+            (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
+            p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
+          ] ;
+        ]
+
+let infinite_post (post: Database.HydratedPost.t) after =
+        div ~a:[
+          a_class [
+            "flex flex-col" ;
+            "w-full max-w-[700px]" ;
+            "bg-["^Theme.p_600^"]" ;
+            "text-[#DEEAEF]" ;
+            "rounded-lg" ;
+            "overflow-hidden" ;
+            "shadow-md"
+          ] ;
+          a_id ("post_" ^ (Int64.to_string post.id)) ;
+          a_hx_typed Get ["/posts?after=" ^ (Int64.to_string after)] ;
+          a_hx_typed Target ["#post_" ^ (Int64.to_string after)] ;
+          a_hx_typed Swap ["afterend"] ;
+          a_hx_typed Trigger ["intersect once"] ;
+        ] [
+          div ~a:[a_class ["p-4"]] [
+            p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
+          ] ;
+          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
+            span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)] ;
+            (* I don't want to handle display names yet, though it is implemented in the DB *)
+            (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
+            p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
+          ] ;
+        ]
+
+let list_posts posts =
+  let len = List.length posts in 
+  match len = 10 with
+  | false -> transform_posts posts (* Ran out of posts to fetch *)
+  | true -> begin
+    (* TODO: refactor the line below because it's bad *)
+    let after_id = (List.nth posts ((List.length posts)-1)).id in
+    let rec aux acc idx = function
+      | [] -> acc
+      | next :: t -> begin
+        match idx = 5 with
+        | false -> aux (acc @ [(construct_post next)]) (idx + 1) t
+        | true -> aux (acc @ [(infinite_post next after_id)]) (idx + 1) t
+      end in 
+    aux [] 0 posts
+  end
+
 (*********************************************************************************************)
 (*                                        list_posts                                         *)
 (* This takes a list of posts that have been retrieved from the database and formats them to *)
 (* look like standard social media tiles using TailwindCSS and the magic of friendship.      *)
 (*********************************************************************************************)
-(* I need to modify this to assign id attributes to everything, so that the screen doesn't flicker *)
+(* I need to modify this to assign id attributes to everything properly, so that the screen doesn't flicker *)
 (* TODO: Clean up the database types. Should they be imported here at all? *)
-let list_posts posts =
-  posts |> List.rev_map (
-    fun (post: Database.HydratedPost.t) -> 
-      div ~a:[
-        a_class [
-          "flex flex-col" ;
-          "w-full max-w-[700px]" ;
-          "bg-["^Theme.p_600^"]" ;
-          "text-[#DEEAEF]" ;
-          "rounded-lg" ;
-          "overflow-hidden" ;
-          "shadow-md"] ;
-        a_id (Int64.to_string post.id)
-      ] [
-        div ~a:[a_class ["p-4"]] [
-          p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
-        ] ;
-        div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
-          span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)] ;
-          (* I don't want to handle display names yet, though it is implemented in the DB *)
-          (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
-          p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
-        ] ;
-      ]
-  )
+let old_list_posts posts =
+  match posts with
+  | [] -> []
+  | [ _ ] | [ _ ; _ ] ->
+      transform_posts posts
+  | _ ->
+      begin
+        (*let part1, part2 = List.split ((List.length posts) / 2) posts in*)
+        transform_posts posts
+      end
 
 let error_page message =
   compile_html (

@@ -14,12 +14,12 @@ let mycontent =
     (Builder.create_fancy_div ()) ;
   ]
 
-let feed_page_template request posts =
+let feed_page_template request =
   div ~a:[a_class ["flex flex-col" ; "w-full" ; "items-center"]] [
     div ~a:[a_class ["py-4" ; "w-full" ; "max-w-[700px]"]] [
       form ~a:[
           Builder.a_hx_typed Post [Xml.uri_of_string "/posts"] ;
-          Builder.a_hx_typed Target ["#feed_container"] ;
+          Builder.a_hx_typed Target ["#posts_container"] ;
           Builder.a_hx_typed Swap ["innerHTML"] ;
           Builder.a_hx_typed Hx_ ["on htmx:afterRequest reset() me"]
       ] [
@@ -45,10 +45,11 @@ let feed_page_template request posts =
       div ~a:[
         a_class ["flex flex-col items-center gap-4"] ;
         Builder.a_hx "get" ["/posts"] ;
+        Builder.a_hx_typed Trigger ["load"] ;
         Builder.a_hx "swap" ["innerHTML"] ;
         a_id "posts_container" ;
-      ]
-      (Builder.list_posts posts) ;
+      ] []
+      (*(Builder.list_posts posts)*) ;
     ]
   ]
 
@@ -70,20 +71,14 @@ let login_page request =
 
 (* The feed page is where the social messages will appear in this test of infinite loading *)
 let feed_page request =
-  let%lwt posts = Dream.sql request Database.fetch_posts in
-  match posts with
-  | Ok (posts) ->
-      begin
         match (Dream.session_field request "username") with
         | Some username ->
             Builder.compile_html (
             Builder.html_wrapper
-              "Posts Page"
-              (Builder.standard_template (feed_page_template request posts) (Builder.right_column username))
+              "WHNVR - Echos from the void"
+              (Builder.standard_template (feed_page_template request) (Builder.right_column username))
           ) |> Lwt.return
         | None -> Builder.error_page "No Username Found" |> Lwt.return
-      end
-  | Error (err) -> Builder.error_page (Caqti_error.show err) |> Lwt.return
 
 (* The page types that are available, so that a non-existant page cannot be specified *)
 type page =
