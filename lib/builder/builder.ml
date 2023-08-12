@@ -139,7 +139,7 @@ let transform_posts posts =
             p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
           ] ;
           div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
-            span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)] ;
+            span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
             (* I don't want to handle display names yet, though it is implemented in the DB *)
             (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
             p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
@@ -164,7 +164,7 @@ let construct_post (post: Database.HydratedPost.t) =
             p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
           ] ;
           div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
-            span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)] ;
+            span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
             (* I don't want to handle display names yet, though it is implemented in the DB *)
             (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
             p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
@@ -192,7 +192,7 @@ let infinite_post (post: Database.HydratedPost.t) after =
             p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
           ] ;
           div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
-            span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase"]] [txt (Ptime.to_rfc3339 post.created)] ;
+            span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
             (* I don't want to handle display names yet, though it is implemented in the DB *)
             (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
             p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
@@ -268,26 +268,27 @@ let login_dialog request =
     form ~a:[
       a_class ["flex flex-col justify-center items-center"] ;
       a_hx_typed Post ["/engage"] ;
+      a_hx_typed ReplaceUrl ["/login"] ;
       a_name "login_form" ;
     ] [
       (Dream.csrf_tag request) |> Unsafe.data ;
-      h1 ~a:[a_class ["text-4xl text-white"]] [txt "WHNVR"] ;
+      h1 ~a:[a_class ["text-4xl shine"]] [txt "WHNVR"] ;
+      p ~a:[a_class ["text-center" ; "pt-2"]] [ txt "Who will be screaming into the void today?" ] ;
       div ~a:[a_class ["p-4" ; "text-["^Theme.p_100^"]"]] [
-        txt "$ echo " ;
         input ~a:[
           a_input_type `Text ;
           a_required () ;
           a_class [
             "bg-neutral-700" ;
             "outline-0" ;
-            "px-2" ;
+            "p-2" ;
             "border-b" ;
             "border-b-solid" ;
             "border-["^Theme.p_100^"]" ;
           ] ;
-          a_name "username"
+          a_name "username" ;
+          a_placeholder "username" ;
         ] () ;
-        txt " >> /dev/null" ;
       ] ;
       div ~a:[a_class ["p-4"]] [
         input ~a:[
@@ -320,16 +321,14 @@ let access_dialog request found_user =
     ] [
       (Dream.csrf_tag request) |> Unsafe.data ;
       h1 ~a:[a_class ["text-4xl text-white"]] [txt "WHNVR"] ;
+      p ~a:[a_class ["text-center" ; "pt-2"]] [ txt ("Enter " ^ found_user ^ "'s passphrase") ] ;
       div ~a:[a_class ["p-4" ; "text-["^Theme.p_100^"]"]] [
-        p ~a:[a_class ["text-center"]] [
-          txt ("Enter " ^ found_user ^ "'s passphrase") ;
-        ] ;
         input ~a:[
           a_input_type `Password ;
           a_class [
             "bg-neutral-700" ;
             "outline-0" ;
-            "px-2" ;
+            "p-2" ;
             "border-b" ;
             "border-b-solid" ;
             "border-["^Theme.p_100^"]" ;
@@ -394,9 +393,12 @@ let enroll_dialog new_name new_secret =
 let html_wrapper page_title content =
   html 
     (head (title (txt page_title)) [
-        script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/htmx.org/dist/htmx.min.js")] (txt "") ;
-        script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/hyperscript.org@0.9.11")] (txt "") ;
-        script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "") ;
+      script ~a:[a_src (Xml.uri_of_string "/static/htmx.min.js")] (txt "") ;
+      script ~a:[a_src (Xml.uri_of_string "/static/_hyperscript.min.js")] (txt "") ;
+      script ~a:[a_src (Xml.uri_of_string "/static/helpers.js")] (txt "") ;
+      script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "") ;
+      (* This does not seem to work right now, I need to figure out how to build classes correctly *)
+      script ~a:[a_src (Xml.uri_of_string "/static/build.css")] (txt "") ;
     ])
     (body ~a:[a_class ["bg-["^Theme.p_950^"]" ; "text-["^Theme.p_100^"]"]] [content])
 

@@ -31,7 +31,7 @@ let feed_page_template request =
             "p-2" ;
           ] ;
           a_name "message" ;
-          a_maxlength 140 ;
+          a_maxlength 420 ;
         ] (txt "") ;
         input ~a:[
           a_class (Builder.button_styles @ ["w-full"]) ;

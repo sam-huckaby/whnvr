@@ -49,7 +49,7 @@ module Posts = struct
       Schema.[
         field ~constraints:[primary_key ~auto_increment:true () ; not_null ()] "id" ~ty:Type.big_int;
         field ~constraints:[foreign_key ~table:Users.table ~columns:Expr.[Users.id] ()] "user_id" ~ty:Type.int ;
-        field "message" ~ty:(Type.character_varying 140) ;
+        field "message" ~ty:(Type.character_varying 420) ;
         field "created" ~ty:Type.time ;
         field "expires" ~ty:Type.time ;
       ]

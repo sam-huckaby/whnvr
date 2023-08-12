@@ -1,23 +1,3 @@
-(** The below functions need to be moved to a helper module *)
-
-(* This is a simple list item finder. I need to either inline this or decide why not to. *)
-let find_list_item l item = List.find (fun (key, _) -> key = item) l
-
-let _ = Random.self_init ()
-
-(** Generate a stupid, ugly, confusing, password until I sit down and write an OCaml passkey library *)
-let ugly_password_generator () =
-  let possible_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*{[}]" in
-  let len = String.length possible_chars in 
-  let octet () =
-    let str = Bytes.create 8 in 
-    for i = 0 to 7 do 
-      Bytes.set str i possible_chars.[Random.int len]
-    done;
-    Bytes.to_string str 
-  in 
-  octet () ^ "-" ^ octet () ^ "-" ^ octet ()
-
 (* Am I supposed to break these out into separate files eventually? *)
 (* It does seem like these list of routes could get enormous *)
 (* Maybe there is a need to move to dynamic routes? *)
@@ -55,7 +35,7 @@ let actions = [
     match%lwt Dream.form request with
     | `Ok form ->
         begin
-          let (_, message) = find_list_item form "message" in 
+          let (_, message) = Utils.find_list_item form "message" in 
           match (Dream.session_field request "id") with
           | Some id ->
             begin
@@ -87,13 +67,13 @@ let no_auth_routes = [
     match%lwt Dream.form request with
     | `Ok form ->
       begin
-        let (_, username) = find_list_item form "username" in
+        let (_, username) = Utils.find_list_item form "username" in
         let%lwt user = Dream.sql request (Database.find_user username) in
         match user with
         | Some (found, _) -> Dream.html (Builder.compile_elt (Builder.access_dialog request found))
         | None -> begin
             (* this value will need to salted before storing in the DB - Why are passwords still a thing!? *)
-            let secret = ugly_password_generator () in
+            let secret = Utils.ugly_password_generator () in
             let%lwt creation = Dream.sql request (Database.create_user username username secret) in
             match creation with
             | Ok (_) -> Dream.html (Builder.compile_elt (Builder.enroll_dialog username secret))
@@ -108,8 +88,8 @@ let no_auth_routes = [
     match%lwt Dream.form request with
     | `Ok form ->
         begin
-          let (_, username) = find_list_item form "username" in 
-          let (_, secret) = find_list_item form "secret" in 
+          let (_, username) = Utils.find_list_item form "username" in 
+          let (_, secret) = Utils.find_list_item form "secret" in 
           let%lwt found_user = Dream.sql request (Database.authenticate username secret) in
           match found_user with
           | Some (id, username) ->
