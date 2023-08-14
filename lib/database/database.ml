@@ -13,6 +13,7 @@ let version = VersionedSchema.version [1;0;0]
 (* init the schema using the above version *)
 let schema = VersionedSchema.init version ~name:"whnvr"
 
+(* TODO: Up this to 100 after testing *)
 (** Configurable page size for infinite scroll *)
 let page_size = 10
 
@@ -90,11 +91,36 @@ let find_user username db =
   | Ok user -> Lwt.return user
   | Error err -> Lwt.return (Some ((Caqti_error.show err), ()))
 
+(** Creating a user only sets these key fields. Everything else is set dynamically elsewhere. *)
+let create_user username display_name secret db =
+  let sha3 = Hash.sha3 256 in
+  let hashed = hash_string sha3 secret in
+  Query.insert ~table:Users.table ~values:(Expr.[
+    Users.username := s username ;
+    Users.display_name := s display_name ;
+    Users.secret := s (hex_of_string hashed) ;
+  ])
+  |> Request.make_zero
+  |> Petrol.exec db
+
 (** ALL TIME IS IN GMT - BECAUSE IT IS - SO JUST LIKE, DEAL WITH THAT *)
+(** 30 days as a Ptime *)
 let login_time_update = 
   let new_time = Ptime.of_float_s ((Unix.time ()) +. 2.592e+6) in 
   match new_time with
   | Some tm -> tm 
+  | None -> Ptime.epoch
+(** 24 hours as a Ptime *)
+let post_ttl = 
+  let new_time = Ptime.of_float_s ((Unix.time ()) +. 86400.0) in 
+  match new_time with
+  | Some tm -> tm 
+  | None -> Ptime.epoch
+(** The current time as a Ptime *)
+let ptime_now () =
+  let today = Ptime.of_float_s (Unix.time ()) in 
+  match today with
+  | Some tm -> tm
   | None -> Ptime.epoch
 
 let authenticate username secret db =
@@ -120,25 +146,6 @@ let authenticate username secret db =
       end
   | Error _ -> Lwt.return None
 
-(** Creating a user only sets these key fields. Everything else is set dynamically elsewhere. *)
-let create_user username display_name secret db =
-  let sha3 = Hash.sha3 256 in
-  let hashed = hash_string sha3 secret in
-  Query.insert ~table:Users.table ~values:(Expr.[
-    Users.username := s username ;
-    Users.display_name := s display_name ;
-    Users.secret := s (hex_of_string hashed) ;
-  ])
-  |> Request.make_zero
-  |> Petrol.exec db
-
-  (** ALL TIME IS IN GMT - BECAUSE IT IS - SO JUST LIKE, DEAL WITH THAT *)
-let post_ttl = 
-  let new_time = Ptime.of_float_s ((Unix.time ()) +. 86400.0) in 
-  match new_time with
-  | Some tm -> tm 
-  | None -> Ptime.epoch
-
 let create_post message user_id db =
   Query.insert ~table:Posts.table ~values:(Expr.[
     Posts.message := s message ;
@@ -147,12 +154,6 @@ let create_post message user_id db =
   ])
   |> Request.make_zero
   |> Petrol.exec db
-
-(* Paginating is probably best done by leveraging post IDs:
-  - Page 1: Get all posts LIMIT 100
-  - Page 2: Get all posts WHERE ID > 100th post ID, LIMIT 100
-  - Page 3: Get all posts WHERE ID > 200th post ID, LIMIT 100
-  *)
 
 (* This is a query which utilizes a workaround in Petrol with aliased fields for the join *)
 let paginated_posts last_post_id db direction =
@@ -180,11 +181,15 @@ let paginated_posts last_post_id db direction =
       ] 
     )
   |> Query.where Expr.(Posts.id < Expr.(vl ~ty:Type.big_int last_post_id))
+  |> Query.where Expr.(Posts.expires > (vl ~ty:Type.time (ptime_now ())))
   |> Query.order_by ~direction Posts.id
-  |> Query.limit Expr.(i page_size) (* TODO: Up to 100 after testing *)
+  |> Query.limit Expr.(i page_size)
   |> Request.make_many
   |> Petrol.collect_list db
   |> Lwt_result.map (List.map HydratedPost.decode)
+
+let last_posts_page post_id db = paginated_posts post_id db `ASC
+let next_posts_page post_id db = paginated_posts post_id db `DESC
 
 (* This is a query which utilizes a workaround in Petrol with aliased fields for the join *)
 let fetch_posts db =
@@ -211,48 +216,17 @@ let fetch_posts db =
         display_name ;
       ] 
     )
+  |> Query.where Expr.(Posts.expires > (vl ~ty:Type.time (ptime_now ())))
   |> Query.limit Expr.(i page_size) (* TODO: Up to 100 after testing *)
   |> Query.order_by Posts.id ~direction:`DESC
   |> Request.make_many
   |> Petrol.collect_list db
   |> Lwt_result.map (List.map HydratedPost.decode)
 
-let last_posts_page post_id db = paginated_posts post_id db `ASC
-let next_posts_page post_id db = paginated_posts post_id db `DESC
-
 let get_posts next_id db =
   match next_id with
   | Some id -> next_posts_page (Int64.of_string id) db
   | None -> fetch_posts db
-
-(* Print the query rather than execute it *)
-let print_fetch_posts =
-  let user_id, user_id_ref = Expr.as_ Users.id ~name:"joined_user_id" in
-  let username, username_ref = Expr.as_ Users.username ~name:"username" in
-  let display_name, display_name_ref = Expr.as_ Users.display_name ~name:"display_name" in
-  Query.select 
-    ~from:Posts.table 
-    Expr.[
-      Posts.id ;
-      username_ref ;
-      display_name_ref ;
-      Posts.message ;
-      Posts.created ;
-    ]
-  |> Query.join
-    ~on:Expr.(Posts.user_id = user_id_ref)
-    (
-      Query.select
-      ~from:Users.table
-      Expr.[
-        user_id ;
-        username ;
-        display_name ;
-      ] 
-    )
-  |> Query.limit Expr.(i 10) (* TODO: Up to 100 after testing *)
-  |> Query.order_by Posts.id ~direction:`DESC
-  |> Format.asprintf "%a" Query.pp
 
 (** Initialize the database and run any migrations that might need to be applied still *)    
 let initialize_db = 

@@ -98,7 +98,7 @@ let create_fancy_div () =
     a_hx "trigger" ["every 1s"] ;
     a_hx_typed Target ["this"]
   ] [txt "This is a FANCY div"]
-
+(*
 module Theme = struct
   let primary = "#344009"
   
@@ -112,11 +112,11 @@ module Theme = struct
   let p_700 = "#375267"
   let p_800 = "#334657"
   let p_900 = "#27333f"
-  let p_950 = "#1b2631"
+  let p_950 = "#1b2631" (* <-- *)
 end
-
+*)
 let button_styles =
-  ["border" ; "rounded" ; "border-["^Theme.p_300^"]" ; "text-["^Theme.p_300^"]" ; "hover:bg-["^Theme.p_950^"]" ; "cursor-pointer" ; "px-4" ; "py-2"]
+  ["border" ; "rounded" ; "border-whnvr-300" ; "text-whnvr-300" ; "hover:bg-whnvr-950" ; "cursor-pointer" ; "px-4" ; "py-2"]
 let submit =
     Html.[input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Submit"] () ]
 
@@ -127,8 +127,8 @@ let transform_posts posts =
           a_class [
             "flex flex-col" ;
             "w-full max-w-[700px]" ;
-            "bg-["^Theme.p_600^"]" ;
-            "text-[#DEEAEF]" ;
+            "bg-whnvr-600" ;
+            "text-whnvr-100" ;
             "rounded-lg" ;
             "overflow-hidden" ;
             "shadow-md"
@@ -136,13 +136,13 @@ let transform_posts posts =
           a_id (Int64.to_string post.id)
         ] [
           div ~a:[a_class ["p-4"]] [
-            p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
+            p ~a:[a_class ["text-whnvr-100"]] [txt post.message] ;
           ] ;
-          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
-            span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
+          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-900"]] [
+            span ~a:[a_class ["text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
             (* I don't want to handle display names yet, though it is implemented in the DB *)
-            (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
-            p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
+            (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
+            p ~a:[a_class ["text-sm font-medium text-whnvr-300"]] [txt ("@" ^ post.username)]
           ] ;
         ]
     )
@@ -152,8 +152,8 @@ let construct_post (post: Database.HydratedPost.t) =
           a_class [
             "flex flex-col" ;
             "w-full max-w-[700px]" ;
-            "bg-["^Theme.p_600^"]" ;
-            "text-[#DEEAEF]" ;
+            "bg-whnvr-600" ;
+            "text-whnvr-100" ;
             "rounded-lg" ;
             "overflow-hidden" ;
             "shadow-md"
@@ -161,13 +161,13 @@ let construct_post (post: Database.HydratedPost.t) =
           a_id ("post_" ^ (Int64.to_string post.id))
         ] [
           div ~a:[a_class ["p-4"]] [
-            p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
+            p ~a:[a_class ["text-whnvr-100"]] [txt post.message] ;
           ] ;
-          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
-            span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
+          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-900"]] [
+            span ~a:[a_class ["text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
             (* I don't want to handle display names yet, though it is implemented in the DB *)
-            (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
-            p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
+            (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
+            p ~a:[a_class ["text-sm font-medium text-whnvr-300"]] [txt ("@" ^ post.username)]
           ] ;
         ]
 
@@ -176,8 +176,8 @@ let infinite_post (post: Database.HydratedPost.t) after =
           a_class [
             "flex flex-col" ;
             "w-full max-w-[700px]" ;
-            "bg-["^Theme.p_600^"]" ;
-            "text-[#DEEAEF]" ;
+            "bg-whnvr-600" ;
+            "text-whnvr-100" ;
             "rounded-lg" ;
             "overflow-hidden" ;
             "shadow-md"
@@ -189,13 +189,13 @@ let infinite_post (post: Database.HydratedPost.t) after =
           a_hx_typed Trigger ["intersect once"] ;
         ] [
           div ~a:[a_class ["p-4"]] [
-            p ~a:[a_class ["text-["^Theme.p_100^"]"]] [txt post.message] ;
+            p ~a:[a_class ["text-whnvr-100"]] [txt post.message] ;
           ] ;
-          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-["^Theme.p_900^"]"]] [
-            span ~a:[a_class ["text-["^Theme.p_300^"] text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
+          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-900"]] [
+            span ~a:[a_class ["text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
             (* I don't want to handle display names yet, though it is implemented in the DB *)
-            (*h2 ~a:[a_class ["text-lg font-semibold text-[#DEEAEF]"]] [txt post.display_name] ;*)
-            p ~a:[a_class ["text-sm font-medium text-["^Theme.p_300^"]"]] [txt ("@" ^ post.username)]
+            (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
+            p ~a:[a_class ["text-sm font-medium text-whnvr-300"]] [txt ("@" ^ post.username)]
           ] ;
         ]
 
@@ -238,8 +238,10 @@ let error_page message =
   compile_html (
     html 
     (head (title (txt "Error!")) [
-        script ~a:[a_src (Xml.uri_of_string "https://unpkg.com/htmx.org/dist/htmx.min.js")] (txt "");
-        script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "");
+      link ~rel:[`Stylesheet] ~href:"/static/build.css" () ;
+      script ~a:[a_src (Xml.uri_of_string "/static/htmx.min.js")] (txt "") ;
+      script ~a:[a_src (Xml.uri_of_string "/static/_hyperscript.min.js")] (txt "") ;
+      script ~a:[a_src (Xml.uri_of_string "/static/helpers.js")] (txt "") ;
     ])
     (body [
       div ~a:[a_class ["bg-orange-600/50" ; "rounded" ; "w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8"]] [
@@ -272,9 +274,9 @@ let login_dialog request =
       a_name "login_form" ;
     ] [
       (Dream.csrf_tag request) |> Unsafe.data ;
-      h1 ~a:[a_class ["text-4xl shine"]] [txt "WHNVR"] ;
+      h1 ~a:[a_class ["text-4xl"]] [txt "WHNVR"] ;
       p ~a:[a_class ["text-center" ; "pt-2"]] [ txt "Who will be screaming into the void today?" ] ;
-      div ~a:[a_class ["p-4" ; "text-["^Theme.p_100^"]"]] [
+      div ~a:[a_class ["p-4" ; "text-whnvr-100"]] [
         input ~a:[
           a_input_type `Text ;
           a_required () ;
@@ -284,7 +286,7 @@ let login_dialog request =
             "p-2" ;
             "border-b" ;
             "border-b-solid" ;
-            "border-["^Theme.p_100^"]" ;
+            "border-whnvr-100" ;
           ] ;
           a_name "username" ;
           a_placeholder "username" ;
@@ -322,7 +324,7 @@ let access_dialog request found_user =
       (Dream.csrf_tag request) |> Unsafe.data ;
       h1 ~a:[a_class ["text-4xl text-white"]] [txt "WHNVR"] ;
       p ~a:[a_class ["text-center" ; "pt-2"]] [ txt ("Enter " ^ found_user ^ "'s passphrase") ] ;
-      div ~a:[a_class ["p-4" ; "text-["^Theme.p_100^"]"]] [
+      div ~a:[a_class ["p-4" ; "text-whnvr-100"]] [
         input ~a:[
           a_input_type `Password ;
           a_class [
@@ -331,7 +333,7 @@ let access_dialog request found_user =
             "p-2" ;
             "border-b" ;
             "border-b-solid" ;
-            "border-["^Theme.p_100^"]" ;
+            "border-whnvr-100" ;
           ] ;
           a_name "secret"
         ] () ;
@@ -360,7 +362,7 @@ let enroll_dialog new_name new_secret =
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
     ] [
       h1 ~a:[a_class ["text-4xl text-white"]] [txt "WHNVR"] ;
-      div ~a:[a_class ["p-4" ; "text-["^Theme.p_100^"]"]] [
+      div ~a:[a_class ["p-4" ; "text-whnvr-100"]] [
         p ~a:[a_class ["mb-2"]] [
           txt ("Created user '" ^ new_name ^ "'!") ;
         ] ;
@@ -370,7 +372,7 @@ let enroll_dialog new_name new_secret =
         p ~a:[a_class ["mt-2"]] [
           txt "This user will self-destruct in 5 minutes if it does not login." ;
         ] ;
-        p ~a:[a_class ["text-center" ; "p-4" ; "bg-["^Theme.p_800^"]"]] [
+        p ~a:[a_class ["text-center" ; "p-4" ; "bg-whnvr-800"]] [
           txt new_secret ;
         ]
       ] ;
@@ -393,14 +395,16 @@ let enroll_dialog new_name new_secret =
 let html_wrapper page_title content =
   html 
     (head (title (txt page_title)) [
+      link ~rel:[`Stylesheet] ~href:"/static/build.css" () ;
       script ~a:[a_src (Xml.uri_of_string "/static/htmx.min.js")] (txt "") ;
       script ~a:[a_src (Xml.uri_of_string "/static/_hyperscript.min.js")] (txt "") ;
       script ~a:[a_src (Xml.uri_of_string "/static/helpers.js")] (txt "") ;
-      script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "") ;
-      (* This does not seem to work right now, I need to figure out how to build classes correctly *)
-      script ~a:[a_src (Xml.uri_of_string "/static/build.css")] (txt "") ;
     ])
-    (body ~a:[a_class ["bg-["^Theme.p_950^"]" ; "text-["^Theme.p_100^"]"]] [content])
+    (body ~a:[a_class ["bg-whnvr-950" ; "text-whnvr-100"]] [content])
+
+      (*script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "") ;*)
+      (* This does not seem to work right now, I need to figure out how to build classes correctly *)
+      (*style ~a:[a_src (Xml.uri_of_string "/static/build.css")] (txt "") ;*)
 
 (*********************************************************************************************)
 (*                                    content_template                                       *)
@@ -431,8 +435,8 @@ let content_template header content =
 let centered_template content =
   div ~a:[a_class ["absolute" ; "flex" ; "flex-col" ; "justify-center" ; "items-center" ; "h-full" ; "w-full"]] [
     div ~a:[a_class [
-      "bg-["^Theme.p_900^"]" ;
-      "rounded border border-solid border-["^Theme.p_300^"]" ;
+      "bg-whnvr-900" ;
+      "rounded border border-solid border-whnvr-300" ;
       "h-[300px] w-[600px]"]] [content] ;
   ]
 
@@ -455,15 +459,15 @@ let infinite_template left_content middle_content right_content =
   ]
 
 let standard_template main_content right_panel_content =
-  div ~a:[a_class ["bg-["^Theme.p_800^"]" ; "flex" ; "flex-row" ; "h-screen" ; "overflow-hidden"]] [
+  div ~a:[a_class ["bg-whnvr-800" ; "flex" ; "flex-row" ; "h-screen" ; "overflow-hidden"]] [
     div ~a:[a_class ["p-4" ; "grow" ; "overflow-auto"]] [main_content] ;
     div ~a:[a_class [
-      "bg-["^Theme.p_900^"]" ;
+      "bg-whnvr-900" ;
       "w-[400px]" ;
       "h-screen" ;
       "shadow-[-5px_0px_5px_rgba(0,0,0,0.2)]" ;
       "border-l" ;
-      "border-["^Theme.p_950^"]"
+      "border-whnvr-950"
     ]] [right_panel_content] ;
   ]
 
@@ -482,7 +486,7 @@ let right_column username =
         "w-[300px] h-[300px]" ;
         "mt-4 mb-4" ;
         "rounded-full" ;
-        "bg-["^Theme.p_950^"]" ;
+        "bg-whnvr-950" ;
         "flex flex-row justify-center items-center" ;
         "text-4xl" ;
       ]] [

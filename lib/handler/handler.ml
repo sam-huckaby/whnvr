@@ -27,7 +27,7 @@ let feed_page_template request =
         textarea ~a:[
           a_class [
             "w-full h-[100px]" ;
-            "bg-["^Builder.Theme.p_700^"]" ;
+            "bg-whnvr-700" ;
             "p-2" ;
           ] ;
           a_name "message" ;
