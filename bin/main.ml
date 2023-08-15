@@ -118,11 +118,14 @@ let auth_middleware next request =
 let () =
   (* I should come up with a catchier name for the DB pass... maybe like Alfonso or something *)
   (* Important note: This will throw `Not_found if the variable is not set, preventing execution *)
-  let db_password = Unix.getenv "DB_PASS" in 
+  (*let _ = Database.initialize in*)
+  match Database.init_database ~force_migrations:true (Uri.of_string Database.connection_string) with
+  | Error (`Msg err) -> Format.printf "Error: %s" err
+  | Ok () ->
   Dream.run ~interface:"0.0.0.0"
   @@ Dream.logger
   (* TODO: Make the rest of this connection string configurable *)
-  @@ Dream.sql_pool ("postgresql://dream:" ^ db_password ^ "@localhost:5432/whnvr")
+  @@ Dream.sql_pool Database.connection_string
   (* Sessions last exactly as long as a user does, if a user has not logged in after this period they are deleted *)
   @@ Dream.sql_sessions ~lifetime:2.592e+6
   @@ Dream.router (

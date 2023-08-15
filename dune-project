@@ -5,22 +5,32 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github sam-huckaby/whnvr))
 
-(authors "Author Name")
+(authors "Sam Huckaby")
 
-(maintainers "Maintainer Name")
+(maintainers "Sam Huckaby")
 
-(license LICENSE)
+(license MIT)
 
-(documentation https://url/to/documentation)
+; TODO: Add documentation link once this is deployed somewhere
 
 (package
  (name whnvr)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ocaml dune)
- (tags
-  (topics "to describe" your project)))
+ (synopsis "A simple OCaml public messaging app")
+ (description "An OCaml-powered public messaging app that is designed to give everything a TTL, both users and posts.")
+ (depends
+   (ocaml (>= 4.12))
+   (dune (>= 3.7))
+   (dream (>= 0))
+   (tyxml (>= 4.5))
+   (petrol (>= 1.2.3))
+   (lwt (>= 5.5))
+   (caqti (>= 1.8.0))
+   (caqti-lwt (>= 1.8.0))
+   (caqti-driver-postgresql (>= 1.8.0))
+   (cryptokit (>= 1.18))
+   )
+ )
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project

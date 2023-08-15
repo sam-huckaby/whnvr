@@ -8,10 +8,11 @@ let hex_of_string s =
   Buffer.contents result
 
 (* WHNVR schema version 1.0.0 *)
-let version = VersionedSchema.version [1;0;0]
+let v_1_0_0 = VersionedSchema.version [1;0;0]
+let v_1_0_1 = VersionedSchema.version [1;0;1]
 
 (* init the schema using the above version *)
-let schema = VersionedSchema.init version ~name:"whnvr"
+let schema = VersionedSchema.init v_1_0_1 ~name:"whnvr"
 
 (* TODO: Up this to 100 after testing *)
 (** Configurable page size for infinite scroll *)
@@ -35,12 +36,16 @@ module Users = struct
   let table, Expr.[id ; username ; display_name ; expires ; secret] =
     VersionedSchema.declare_table schema ~name:"users"
       Schema.[
-        field ~constraints:[primary_key ~auto_increment:true ()] "id" ~ty:Type.int ;
-        field "username" ~ty:Type.(character_varying 32) ;
-        field "display_name" ~ty:Type.(character_varying 32) ;
-        field "expires" ~ty:Type.time ;
-        field "secret" ~ty:Type.bytea ;
+        field ~constraints:[primary_key ()] "id" ~ty:Type.smallserial ;
+        field "username" ~ty:Type.(character_varying 32) ~constraints:[not_null ()] ;
+        field "display_name" ~ty:Type.(character_varying 32) ~constraints:[not_null ()] ;
+        field "expires" ~ty:Type.time ~constraints:[not_null ()] ;
+        field "secret" ~ty:Type.bytea ~constraints:[not_null ()] ;
       ]
+      ~migrations:[v_1_0_1, [
+          Caqti_request.Infix.(Caqti_type.unit ->. Caqti_type.unit)
+            {sql|ALTER TABLE users ALTER COLUMN expires SET DEFAULT (now() + '00:05:00'::interval)|sql} ;
+        ]]
 end
 
 (* declare a table, returning the table name and fields *)
@@ -48,12 +53,18 @@ module Posts = struct
   let table, Expr.[id ; user_id ; message ; created ; expires] =
     VersionedSchema.declare_table schema ~name:"posts"
       Schema.[
-        field ~constraints:[primary_key ~auto_increment:true () ; not_null ()] "id" ~ty:Type.big_int;
-        field ~constraints:[foreign_key ~table:Users.table ~columns:Expr.[Users.id] ()] "user_id" ~ty:Type.int ;
-        field "message" ~ty:(Type.character_varying 420) ;
-        field "created" ~ty:Type.time ;
-        field "expires" ~ty:Type.time ;
+        field ~constraints:[primary_key () ; not_null ()] "id" ~ty:Type.big_serial;
+        field ~constraints:[foreign_key ~table:Users.table ~columns:Expr.[Users.id] () ; not_null ()] "user_id" ~ty:Type.int ;
+        field "message" ~ty:(Type.character_varying 420) ~constraints:[not_null ()] ;
+        field "created" ~ty:Type.time ~constraints:[not_null ()] ;
+        field "expires" ~ty:Type.time ~constraints:[not_null ()] ;
       ]
+      ~migrations:[v_1_0_1, [
+          Caqti_request.Infix.(Caqti_type.unit ->. Caqti_type.unit)
+            {sql|ALTER TABLE posts ALTER COLUMN expires SET DEFAULT (now() + '1 day'::interval)|sql} ;
+          Caqti_request.Infix.(Caqti_type.unit ->. Caqti_type.unit)
+            {sql|ALTER TABLE posts ALTER COLUMN created SET DEFAULT CURRENT_TIMESTAMP|sql} ;
+        ]]
 end
 
 module HydratedPost = struct
@@ -117,7 +128,7 @@ let post_ttl =
   | Some tm -> tm 
   | None -> Ptime.epoch
 (** The current time as a Ptime *)
-let ptime_now () =
+let ptime_now =
   let today = Ptime.of_float_s (Unix.time ()) in 
   match today with
   | Some tm -> tm
@@ -181,7 +192,7 @@ let paginated_posts last_post_id db direction =
       ] 
     )
   |> Query.where Expr.(Posts.id < Expr.(vl ~ty:Type.big_int last_post_id))
-  |> Query.where Expr.(Posts.expires > (vl ~ty:Type.time (ptime_now ())))
+  |> Query.where Expr.(Posts.expires > vl ~ty:Type.time ptime_now )
   |> Query.order_by ~direction Posts.id
   |> Query.limit Expr.(i page_size)
   |> Request.make_many
@@ -216,7 +227,7 @@ let fetch_posts db =
         display_name ;
       ] 
     )
-  |> Query.where Expr.(Posts.expires > (vl ~ty:Type.time (ptime_now ())))
+  |> Query.where Expr.(Posts.expires >= vl ~ty:Type.time ptime_now)
   |> Query.limit Expr.(i page_size) (* TODO: Up to 100 after testing *)
   |> Query.order_by Posts.id ~direction:`DESC
   |> Request.make_many
@@ -228,12 +239,67 @@ let get_posts next_id db =
   | Some id -> next_posts_page (Int64.of_string id) db
   | None -> fetch_posts db
 
+let connection_string =
+  let user = Unix.getenv "DB_USER" in
+  let password = Unix.getenv "DB_PASS" in 
+  "postgresql://" ^ user ^ ":" ^ password ^ "@localhost:5432/test_dream" (*whnvr*)
+
 (** Initialize the database and run any migrations that might need to be applied still *)    
-let initialize_db = 
-  let db_password = Unix.getenv "DB_PASS" in 
-  let%lwt conn = Caqti_lwt.connect (Uri.of_string ("postgresql://dream:" ^ db_password ^ "@localhost:5432/whnvr")) in
+let old_initialize_db = 
+  let%lwt conn = Caqti_lwt.connect (Uri.of_string connection_string) in
   match conn with
   | Error err -> Lwt.fail_with (Caqti_error.show err)
   | Ok conn -> Petrol.VersionedSchema.initialise schema conn |> Lwt.return
 
+(** Initialize the database and run any migrations that might need to be applied still *)    
+let initialize = 
+  let init =
+    let open Lwt_result.Syntax in 
+    Caqti_lwt.with_connection (Uri.of_string connection_string) (fun conn ->
+      let* needs_migration = 
+        Petrol.VersionedSchema.migrations_needed schema conn in 
+      Format.printf "Needs migration: %b\n@." needs_migration;
+      Petrol.VersionedSchema.initialise schema conn
+    ) in 
+  match Lwt_main.run init with
+  | Ok () -> Ok ()
+  | Error _ -> Error ()
+
+let init_database ?(force_migrations=false) path =
+  let initialise =
+    let open Lwt_result.Syntax in
+    Caqti_lwt.with_connection path (fun conn ->
+      let* needs_migration =
+        Petrol.VersionedSchema.migrations_needed schema conn in
+      Format.printf "needs migration: %b\n@." needs_migration;
+      let* () =
+        if needs_migration && not force_migrations
+        then
+          Lwt_result.fail
+            (`Msg "migrations needed for local database - please \
+                   re-run with suitable flags (-m). (You probably also \
+                   want to backup your database file as well)")
+        else Lwt_result.return () in
+      Petrol.VersionedSchema.initialise schema conn
+    ) in
+  let version_to_string (ver: Petrol.VersionedSchema.version) =
+    String.concat "." (List.map string_of_int (ver :> int list)) in
+  match Lwt_main.run initialise with
+  | Ok () -> Ok ()
+  | Error (`Newer_version_than_supported version) ->
+    Error (`Msg
+             (
+               "database uses newer version (" ^
+               (version_to_string version) ^
+               ") than supported"))
+  | Error (#Caqti_error.t as err) ->
+    Error (`Msg ("internal error: " ^ Caqti_error.show err))
+  | Error (`Msg m) -> Error (`Msg m)
+
+(*
+  let%lwt conn = Caqti_lwt.connect (Uri.of_string connection_string) in
+  match conn with
+  | Error err -> Lwt.fail_with (Caqti_error.show err)
+  | Ok conn -> Petrol.VersionedSchema.initialise schema conn |> Lwt.return
+*)
 
