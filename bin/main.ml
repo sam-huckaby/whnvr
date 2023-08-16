@@ -39,7 +39,7 @@ let actions = [
           match (Dream.session_field request "id") with
           | Some id ->
             begin
-              let%lwt _ = Dream.sql request  (Database.create_post message (int_of_string id)) in 
+              let%lwt _ = Dream.sql request  (Database.create_post message (Int64.of_string id)) in 
               let%lwt posts = Dream.sql request Database.fetch_posts in
               match posts with
               | Ok (posts) -> Dream.html (Builder.compile_elt_list (Builder.list_posts posts))
@@ -116,9 +116,6 @@ let auth_middleware next request =
           next request
 
 let () =
-  (* I should come up with a catchier name for the DB pass... maybe like Alfonso or something *)
-  (* Important note: This will throw `Not_found if the variable is not set, preventing execution *)
-  (*let _ = Database.initialize in*)
   match Database.init_database ~force_migrations:true (Uri.of_string Database.connection_string) with
   | Error (`Msg err) -> Format.printf "Error: %s" err
   | Ok () ->
