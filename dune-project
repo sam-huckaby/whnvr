@@ -20,11 +20,11 @@
  (synopsis "A simple OCaml public messaging app")
  (description "An OCaml-powered public messaging app that is designed to give everything a TTL, both users and posts.")
  (depends
-   (ocaml (>= 4.12))
+   (ocaml (>= 5.0))
    (dune (>= 3.7))
    (dream (>= 0))
    (tyxml (>= 4.5))
-   (petrol (>= 1.2.3))
+   (petrol (>= 1.2.0))
    (lwt (>= 5.5))
    (caqti (>= 1.8.0))
    (caqti-lwt (>= 1.8.0))

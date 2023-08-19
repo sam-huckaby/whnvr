@@ -41,7 +41,8 @@ let feed_page_template request =
       ] ;
     ] ;
     div ~a:[
-      a_id "feed_container"
+      a_id "feed_container" ;
+      a_class ["py-4" ; "w-full" ; "max-w-[700px]"] ;
     ] [
       div ~a:[
         a_class ["flex flex-col items-center gap-4"] ;

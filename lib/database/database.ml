@@ -285,11 +285,13 @@ let get_posts next_id db =
   | None -> fetch_posts db
 
 let connection_string =
-  (* Important note: This will throw `Not_found if the variable is not set, preventing execution *)
+  (* Important note: These will throw `Not_found if the variables are not set, preventing execution *)
+  let host = Unix.getenv "DB_HOST" in
+  let port = Unix.getenv "DB_PORT" in
+  let name = Unix.getenv "DB_NAME" in
   let user = Unix.getenv "DB_USER" in
-  (* Important note: This will throw `Not_found if the variable is not set, preventing execution *)
-  let password = Unix.getenv "DB_PASS" in 
-  "postgresql://" ^ user ^ ":" ^ password ^ "@localhost:5432/test_dream" (*whnvr*)
+  let pass = Unix.getenv "DB_PASS" in 
+  "postgresql://" ^ user ^ ":" ^ pass ^ "@" ^ host ^ ":" ^ port ^ "/" ^ name
 
 (* I borrowed this function from github:gopiandcode/ocamlot *)
 let init_database ?(force_migrations=false) path =

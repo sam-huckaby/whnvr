@@ -1,3 +1,4 @@
 (library
   (name builder)
+  (public_name whnvr.builder)
   (libraries dream database tyxml))

@@ -1,5 +1,6 @@
 (library
   (name utils)
+  (public_name whnvr.utils)
   (libraries tyxml)
   (preprocess (pps lwt_ppx))
  )

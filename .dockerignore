@@ -1,0 +1,4 @@
+# Needs to ignore the local build, per https://community.fly.io/t/ocaml-dockerfile-permission-denied-on-opam-exec-dune-build/2586
+_build
+tailwindcss
+

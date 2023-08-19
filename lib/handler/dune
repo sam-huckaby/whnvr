@@ -1,5 +1,6 @@
 (library
   (name handler)
+  (public_name whnvr.handler)
   (libraries dream builder database tyxml)
   (preprocess (pps lwt_ppx))
  )

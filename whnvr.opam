@@ -9,11 +9,11 @@ license: "MIT"
 homepage: "https://github.com/sam-huckaby/whnvr"
 bug-reports: "https://github.com/sam-huckaby/whnvr/issues"
 depends: [
-  "ocaml" {>= "4.12"}
+  "ocaml" {>= "5.0"}
   "dune" {>= "3.7" & >= "3.7"}
   "dream" {>= "0"}
   "tyxml" {>= "4.5"}
-  "petrol" {>= "1.2.3"}
+  "petrol" {>= "1.2.0"}
   "lwt" {>= "5.5"}
   "caqti" {>= "1.8.0"}
   "caqti-lwt" {>= "1.8.0"}
