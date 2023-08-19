@@ -2,17 +2,6 @@ open Tyxml.Html
 
 (* This is a dummy page, to show on Hello *)
 (* Probably just gonna delete this, or move it to builder *)
-let mycontent =
-  div ~a:[a_class ["bg-orange-600/50" ; "rounded" ; "w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8"]] [
-    h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "The Page Title" ] ;
-    div ~a:[a_class ["p-4"]] [
-      txt "HELLO DREAM!" ;
-    ] ;
-    div ~a:[a_class ["p-4"]] [
-      txt "This is the second child" ;
-    ] ;
-    (Builder.create_fancy_div ()) ;
-  ]
 
 let feed_page_template request =
   div ~a:[a_class ["flex flex-col" ; "w-full" ; "items-center"]] [
@@ -59,8 +48,8 @@ let feed_page_template request =
 let hello_page _ =
   Builder.compile_html (
     Builder.html_wrapper 
-      "Home Base"
-      (Builder.content_template (h1 ~a:[a_class ["text-2xl"]] [txt "Hello Page!"]) mycontent)
+      "What is WHNVR?"
+      (Builder.content_template (h1 ~a:[a_class ["text-2xl"]] [txt "WHNVR"]) Builder.hello_content)
   ) |> Lwt.return
 
 (* The login page is where the user enters their username and either logs in or registers *)

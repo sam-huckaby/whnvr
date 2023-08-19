@@ -7,11 +7,6 @@ let pages = [
     let%lwt page = (Handler.generate_page Feed request) in
     Dream.html page
   ) ;
-
-  Dream.get "/hello" (fun request ->
-    let%lwt page = (Handler.generate_page Hello request) in
-    Dream.html page
-  ) ;
 ]
 
 (* The below "fragments" are page pieces that can be hot swapped out with htmx *)
@@ -57,6 +52,11 @@ let actions = [
 
 (** The routes below are not protected by the auth middleware *)
 let no_auth_routes = [
+  Dream.get "/hello" (fun request ->
+    let%lwt page = (Handler.generate_page Hello request) in
+    Dream.html page
+  ) ;
+
   Dream.get "/login" (fun request ->
     let%lwt page = (Handler.generate_page Login request) in
     Dream.html page

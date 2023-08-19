@@ -276,7 +276,7 @@ let login_dialog request =
       (Dream.csrf_tag request) |> Unsafe.data ;
       h1 ~a:[a_class ["text-4xl"]] [txt "WHNVR"] ;
       p ~a:[a_class ["text-center" ; "pt-2"]] [ txt "Who will be screaming into the void today?" ] ;
-      div ~a:[a_class ["p-4" ; "text-whnvr-100"]] [
+      div ~a:[a_class ["p-4" ; "text-whnvr-100" ; "flex" ; "flex-col"]] [
         input ~a:[
           a_input_type `Text ;
           a_required () ;
@@ -292,6 +292,11 @@ let login_dialog request =
           a_placeholder "username" ;
         ] () ;
       ] ;
+        (
+          match error with
+          | Some err -> p ~a:[a_class ["text-red-600"]] [ txt err ]
+          | None -> p []
+        ) ;
       div ~a:[a_class ["p-4"]] [
         input ~a:[
           a_input_type `Submit ;
@@ -309,9 +314,7 @@ let login_dialog request =
           ]
         ] () ;
       ] ;
-      match error with
-      | Some err -> p [ txt err ]
-      | None -> p []
+      a ~a:[a_href (Xml.uri_of_string "/hello") ; a_class ["underline"]] [ txt "What is this place?" ] ;
     ] ;
   ]
 
@@ -351,6 +354,9 @@ let access_dialog request found_user =
       div ~a:[a_class ["p-4"]] [
         input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Continue"] () ;
       ] ;
+      p [
+        a ~a:[a_class ["underline"] ; a_href (Xml.uri_of_string "/login")] [ txt "Back to login" ] ;
+      ] ;
     ]
 
 (** The enroll dialog needs to receive a new secret key that can be displayed
@@ -382,6 +388,45 @@ let enroll_dialog new_name new_secret =
         ]
       ] ;
     ]
+
+let hello_content =
+  div ~a:[a_class ["w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8"]] [
+    h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "Where am I?" ] ;
+    div ~a:[a_class ["p-4"]] [
+      p [
+        txt "You're not in a dream, though we do use the Dream web framework in OCaml to build this page. " ;
+        txt "WHNVR is a place to exchange messages that everyone can read. " ;
+        txt "However, messages in WHNVR are not like in other messaging apps. This is not a \"town hall\" where ideas grow and flourish, but a void where they go to die. " ;
+      ] ;
+    ] ;
+    div ~a:[a_class ["p-4"]] [
+      p [
+        txt "On WHNVR, everything is always " ;
+        i [txt "dying. "] ;
+      ] ;
+    ] ;
+    div ~a:[a_class ["p-4"]] [
+      p [
+        txt "The messages here only live for 24 hours from the time they are sent. Users live as long as they are in use, " ;
+        txt "so if you are inactive for more than 30 days (24 hour periods), your user is destroyed." ;
+      ] ;
+    ] ;
+    div ~a:[a_class ["p-4"]] [
+      p [
+        txt "Security is handled a little differently as well. When you log in, you will be given a passphrase which is the key to your username. " ;
+        txt "Passwords cannot be changed. The passphrase you are given is about as secure as you can get for the time being." ;
+        txt "The next key step for this project is to migrate to Universal Passkeys provided by Beyond Identity, so passwords will die as well." ;
+      ] ;
+    ] ;
+    div ~a:[a_class ["p-4"]] [
+      p [
+        txt "For now, simply type in the username you want, and see if it's available. Once you're in, you can begin to scream into the void like everyone else." ;
+      ] ;
+    ] ;
+    div ~a:[a_class ["p-4" ; "text-center"]] [
+      a ~a:[a_href (Xml.uri_of_string "/login") ; a_class ["underline"]] [txt "Return to login"] ;
+    ]
+  ]
 
 (*********************************************************************************************)
 (*                                      html_wrapper                                         *)
@@ -416,10 +461,10 @@ let html_wrapper page_title content =
 (*********************************************************************************************)
 let content_template header content =
   div ~a:[a_class ["flex flex-col"]] [
-    div ~a:[a_class ["flex justify-center items-center h-32"]] [header] ;
+    div ~a:[a_class ["flex justify-center items-center" ; "h-32"]] [header] ;
     div ~a:[a_class ["flex flex-row grow"]] [
       div ~a:[a_class ["sm:w-[10%]"]] [] ;
-      div ~a:[a_class ["bg-red-600 grow"]] [content] ;
+      div ~a:[a_class ["grow" ; "bg-whnvr-900" ; "rounded border border-solid border-whnvr-300"]] [content] ;
       div ~a:[a_class ["sm:w-[10%]"]] [] ;
     ]
   ]
@@ -433,11 +478,12 @@ let content_template header content =
 (* @param {[< html_types.flow5 ] elt} content - The content for the page,                    *)
 (*********************************************************************************************)
 let centered_template content =
-  div ~a:[a_class ["absolute" ; "flex" ; "flex-col" ; "justify-center" ; "items-center" ; "h-full" ; "w-full"]] [
+  div ~a:[a_class ["absolute" ; "flex flex-col justify-center items-center" ; "h-full w-full"]] [
     div ~a:[a_class [
       "bg-whnvr-900" ;
       "rounded border border-solid border-whnvr-300" ;
-      "h-[300px] w-[600px]"]] [content] ;
+      "h-[300px] w-[600px]" ;
+    ]] [content] ;
   ]
 
 (*********************************************************************************************)
