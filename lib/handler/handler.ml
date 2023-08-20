@@ -1,8 +1,5 @@
 open Tyxml.Html
 
-(* This is a dummy page, to show on Hello *)
-(* Probably just gonna delete this, or move it to builder *)
-
 let feed_page_template request =
   div ~a:[a_class ["flex flex-col" ; "w-full" ; "items-center"]] [
     div ~a:[a_class ["py-4" ; "w-full" ; "max-w-[700px]"]] [
@@ -16,14 +13,16 @@ let feed_page_template request =
         textarea ~a:[
           a_class [
             "w-full h-[100px]" ;
-            "bg-whnvr-700" ;
+            "bg-whnvr-300 dark:bg-whnvr-700" ;
+            "border-whnvr-600 dark:border-whnvr-400" ;
             "p-2" ;
           ] ;
           a_name "message" ;
+          a_placeholder "The void is listening, what will you say?" ;
           a_maxlength 420 ;
         ] (txt "") ;
         input ~a:[
-          a_class (Builder.button_styles @ ["w-full"]) ;
+          a_class (Builder.button_styles @ ["w-full" ; "hover:bg-whnvr-300"]) ;
           a_input_type `Submit ;
           a_value "Post"
         ] ()
@@ -40,7 +39,6 @@ let feed_page_template request =
         Builder.a_hx "swap" ["innerHTML"] ;
         a_id "posts_container" ;
       ] []
-      (*(Builder.list_posts posts)*) ;
     ]
   ]
 
@@ -49,7 +47,7 @@ let hello_page _ =
   Builder.compile_html (
     Builder.html_wrapper 
       "What is WHNVR?"
-      (Builder.content_template (h1 ~a:[a_class ["text-2xl"]] [txt "WHNVR"]) Builder.hello_content)
+      (Builder.content_template (h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"]) Builder.hello_content)
   ) |> Lwt.return
 
 (* The login page is where the user enters their username and either logs in or registers *)

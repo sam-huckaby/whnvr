@@ -60,63 +60,9 @@ let a_hx_typed name =
 (* Type safety? What's that? *)
 let a_hx name = Tyxml.Html.Unsafe.space_sep_attrib ("hx-" ^ name)
 
-(*********************************************************************************************)
-(*                                        Fancy Div                                          *)
-(* The Fancy Div is a proof of concept, that uses htmx to generate the same div with         *)
-(* different background colors and a transition style to dynamically change the backgound    *)
-(* every second. This is cool, but it just uses HTTP requests and is pretty inefficient      *)
-(*********************************************************************************************)
-(* Initialize Random *)
-let _ = Random.self_init ()
-
-let create_fancy_div () =
-  let colors = [| 
-    "bg-red-500" ;
-    "bg-blue-500" ;
-    "bg-orange-500" ;
-    "bg-green-500" ;
-    "bg-purple-500" ;
-    "bg-stone-500" ;
-    "bg-amber-500" ;
-    "bg-yellow-500" ;
-    "bg-lime-500" ;
-    "bg-emerald-500" ;
-    "bg-teal-500" ;
-    "bg-cyan-500" ;
-    "bg-sky-500" ;
-    "bg-indigo-500" ;
-    "bg-fuchsia-500" ;
-    "bg-pink-500" ;
-    "bg-rose-500"
-  |] in
-  let index_to_use = Random.int (Array.length colors) in 
-  div ~a:[
-    a_class [colors.(index_to_use) ^ " transition duration-1000 p-4 text-black"] ;
-    a_id "fancy_div" ;
-    a_hx "get" ["/colorize"] ;
-    a_hx "swap" ["outerHTML"] ;
-    a_hx "trigger" ["every 1s"] ;
-    a_hx_typed Target ["this"]
-  ] [txt "This is a FANCY div"]
-(*
-module Theme = struct
-  let primary = "#344009"
-  
-  let p_50 = "#f2f7f9"
-  let p_100 = "#deeaef"
-  let p_200 = "#c0d5e1"
-  let p_300 = "#95b9cb"
-  let p_400 = "#6293ae" (* Probably don't use these much at all *)
-  let p_500 = "#477793" (* Probably don't use these much at all *)
-  let p_600 = "#3e627c" (* Probably don't use these much at all *)
-  let p_700 = "#375267"
-  let p_800 = "#334657"
-  let p_900 = "#27333f"
-  let p_950 = "#1b2631" (* <-- *)
-end
-*)
+(** Some standard button styles *)
 let button_styles =
-  ["border" ; "rounded" ; "border-whnvr-300" ; "text-whnvr-300" ; "hover:bg-whnvr-950" ; "cursor-pointer" ; "px-4" ; "py-2"]
+  ["border rounded border-whnvr-800 dark:border-whnvr-300" ; "text-whnvr-800 dark:text-whnvr-300" ; "hover:bg-whnvr-200 dark:hover:bg-whnvr-950" ; "cursor-pointer" ; "px-4" ; "py-2"]
 let submit =
     Html.[input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Submit"] () ]
 
@@ -127,8 +73,8 @@ let transform_posts posts =
           a_class [
             "flex flex-col" ;
             "w-full max-w-[700px]" ;
-            "bg-whnvr-600" ;
-            "text-whnvr-100" ;
+            "bg-whnvr-300 dark:bg-whnvr-600" ;
+            "text-whnvr-900 dark:text-whnvr-100" ;
             "rounded-lg" ;
             "overflow-hidden" ;
             "shadow-md"
@@ -136,13 +82,13 @@ let transform_posts posts =
           a_id (Int64.to_string post.id)
         ] [
           div ~a:[a_class ["p-4"]] [
-            p ~a:[a_class ["text-whnvr-100"]] [txt post.message] ;
+            p ~a:[a_class ["text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
           ] ;
-          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-900"]] [
-            span ~a:[a_class ["text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
+          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-500 dark:bg-whnvr-900"]] [
+            span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
             (* I don't want to handle display names yet, though it is implemented in the DB *)
             (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
-            p ~a:[a_class ["text-sm font-medium text-whnvr-300"]] [txt ("@" ^ post.username)]
+            p ~a:[a_class ["text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
           ] ;
         ]
     )
@@ -152,7 +98,7 @@ let construct_post (post: Database.HydratedPost.t) =
           a_class [
             "flex flex-col" ;
             "w-full max-w-[700px]" ;
-            "bg-whnvr-600" ;
+            "bg-whnvr-300 dark:bg-whnvr-600" ;
             "text-whnvr-100" ;
             "rounded-lg" ;
             "overflow-hidden" ;
@@ -161,44 +107,50 @@ let construct_post (post: Database.HydratedPost.t) =
           a_id ("post_" ^ (Int64.to_string post.id))
         ] [
           div ~a:[a_class ["p-4"]] [
-            p ~a:[a_class ["text-whnvr-100"]] [txt post.message] ;
+            p ~a:[a_class ["text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
           ] ;
-          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-900"]] [
-            span ~a:[a_class ["text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
+          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-500 dark:bg-whnvr-900"]] [
+            span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
             (* I don't want to handle display names yet, though it is implemented in the DB *)
             (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
-            p ~a:[a_class ["text-sm font-medium text-whnvr-300"]] [txt ("@" ^ post.username)]
+            p ~a:[a_class ["text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
           ] ;
         ]
 
 let infinite_post (post: Database.HydratedPost.t) after =
-        div ~a:[
-          a_class [
-            "flex flex-col" ;
-            "w-full max-w-[700px]" ;
-            "bg-whnvr-600" ;
-            "text-whnvr-100" ;
-            "rounded-lg" ;
-            "overflow-hidden" ;
-            "shadow-md"
-          ] ;
-          a_id ("post_" ^ (Int64.to_string post.id)) ;
-          a_hx_typed Get ["/posts?after=" ^ (Int64.to_string after)] ;
-          a_hx_typed Target ["#post_" ^ (Int64.to_string after)] ;
-          a_hx_typed Swap ["afterend"] ;
-          a_hx_typed Trigger ["intersect once"] ;
-        ] [
-          div ~a:[a_class ["p-4"]] [
-            p ~a:[a_class ["text-whnvr-100"]] [txt post.message] ;
-          ] ;
-          div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-900"]] [
-            span ~a:[a_class ["text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
-            (* I don't want to handle display names yet, though it is implemented in the DB *)
-            (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
-            p ~a:[a_class ["text-sm font-medium text-whnvr-300"]] [txt ("@" ^ post.username)]
-          ] ;
-        ]
+  div ~a:[
+    a_class [
+      "flex flex-col" ;
+      "w-full max-w-[700px]" ;
+      "bg-whnvr-300 dark:bg-whnvr-600" ;
+      "text-whnvr-100" ;
+      "rounded-lg" ;
+      "overflow-hidden" ;
+      "shadow-md"
+    ] ;
+    a_id ("post_" ^ (Int64.to_string post.id)) ;
+    a_hx_typed Get ["/posts?after=" ^ (Int64.to_string after)] ;
+    a_hx_typed Target ["#post_" ^ (Int64.to_string after)] ;
+    a_hx_typed Swap ["afterend"] ;
+    a_hx_typed Trigger ["intersect once"] ;
+  ] [
+    div ~a:[a_class ["p-4"]] [
+      p ~a:[a_class ["text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
+    ] ;
+    div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-500 dark:bg-whnvr-900"]] [
+      span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
+      (* I don't want to handle display names yet, though it is implemented in the DB *)
+      (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
+      p ~a:[a_class ["text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
+    ] ;
+  ]
 
+(*********************************************************************************************)
+(*                                        list_posts                                         *)
+(* This takes a list of posts that have been retrieved from the database and formats them to *)
+(* look like standard social media tiles using TailwindCSS and the magic of friendship.      *)
+(*********************************************************************************************)
+(* I need to modify this to assign id attributes to everything properly, so that the screen doesn't flicker *)
 let list_posts posts =
   let len = List.length posts in 
   match len = 10 with
@@ -215,24 +167,6 @@ let list_posts posts =
       end in 
     aux [] 0 posts
   end
-
-(*********************************************************************************************)
-(*                                        list_posts                                         *)
-(* This takes a list of posts that have been retrieved from the database and formats them to *)
-(* look like standard social media tiles using TailwindCSS and the magic of friendship.      *)
-(*********************************************************************************************)
-(* I need to modify this to assign id attributes to everything properly, so that the screen doesn't flicker *)
-(* TODO: Clean up the database types. Should they be imported here at all? *)
-let old_list_posts posts =
-  match posts with
-  | [] -> []
-  | [ _ ] | [ _ ; _ ] ->
-      transform_posts posts
-  | _ ->
-      begin
-        (*let part1, part2 = List.split ((List.length posts) / 2) posts in*)
-        transform_posts posts
-      end
 
 let error_page message =
   compile_html (
@@ -274,19 +208,17 @@ let login_dialog request =
       a_name "login_form" ;
     ] [
       (Dream.csrf_tag request) |> Unsafe.data ;
-      h1 ~a:[a_class ["text-4xl"]] [txt "WHNVR"] ;
+      h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
       p ~a:[a_class ["text-center" ; "pt-2"]] [ txt "Who will be screaming into the void today?" ] ;
-      div ~a:[a_class ["p-4" ; "text-whnvr-100" ; "flex" ; "flex-col"]] [
+      div ~a:[a_class ["p-4" ; "flex" ; "flex-col"]] [
         input ~a:[
           a_input_type `Text ;
           a_required () ;
           a_class [
-            "bg-neutral-700" ;
+            "bg-neutral-300 dark:bg-neutral-700" ;
             "outline-0" ;
             "p-2" ;
-            "border-b" ;
-            "border-b-solid" ;
-            "border-whnvr-100" ;
+            "border-b border-b-solid border-whnvr-900 dark:border-whnvr-100" ;
           ] ;
           a_name "username" ;
           a_placeholder "username" ;
@@ -325,28 +257,23 @@ let access_dialog request found_user =
       a_name "access_form" ;
     ] [
       (Dream.csrf_tag request) |> Unsafe.data ;
-      h1 ~a:[a_class ["text-4xl text-white"]] [txt "WHNVR"] ;
-      p ~a:[a_class ["text-center" ; "pt-2"]] [ txt ("Enter " ^ found_user ^ "'s passphrase") ] ;
-      div ~a:[a_class ["p-4" ; "text-whnvr-100"]] [
+      h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+      p ~a:[a_class ["text-center" ; "pt-2"]] [ txt ("User \"" ^ found_user ^ "\" found! Enter your passphrase.") ] ;
+      div ~a:[a_class ["p-4"]] [
         input ~a:[
           a_input_type `Password ;
           a_class [
-            "bg-neutral-700" ;
+            "bg-neutral-300 dark:bg-neutral-700" ;
             "outline-0" ;
             "p-2" ;
             "border-b" ;
             "border-b-solid" ;
-            "border-whnvr-100" ;
+            "border-whnvr-900 dark:border-whnvr-100" ;
           ] ;
           a_name "secret"
         ] () ;
         input ~a:[
           a_input_type `Hidden ;
-          a_class [
-            "bg-neutral-700" ;
-            "outline-0" ;
-            "px-2" ;
-          ] ;
           a_name "username" ;
           a_value found_user ;
         ] () ;
@@ -367,8 +294,8 @@ let enroll_dialog new_name new_secret =
     div ~a:[
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
     ] [
-      h1 ~a:[a_class ["text-4xl text-white"]] [txt "WHNVR"] ;
-      div ~a:[a_class ["p-4" ; "text-whnvr-100"]] [
+      h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+      div ~a:[a_class ["p-4" ; "text-whnvr-950 dark:text-whnvr-100"]] [
         p ~a:[a_class ["mb-2"]] [
           txt ("Created user '" ^ new_name ^ "'!") ;
         ] ;
@@ -378,7 +305,7 @@ let enroll_dialog new_name new_secret =
         p ~a:[a_class ["mt-2"]] [
           txt "This user will self-destruct in 5 minutes if it does not login." ;
         ] ;
-        p ~a:[a_class ["text-center" ; "p-4" ; "bg-whnvr-800"]] [
+        p ~a:[a_class ["text-center" ; "p-4" ; "bg-whnvr-300 dark:bg-whnvr-800"]] [
           txt new_secret ;
         ]
       ] ;
@@ -445,7 +372,7 @@ let html_wrapper page_title content =
       script ~a:[a_src (Xml.uri_of_string "/static/_hyperscript.min.js")] (txt "") ;
       script ~a:[a_src (Xml.uri_of_string "/static/helpers.js")] (txt "") ;
     ])
-    (body ~a:[a_class ["bg-whnvr-950" ; "text-whnvr-100"]] [content])
+    (body ~a:[a_class ["bg-whnvr-200 dark:bg-whnvr-950" ; "text-whnvr-900 dark:text-whnvr-100"]] [content])
 
       (*script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "") ;*)
       (* This does not seem to work right now, I need to figure out how to build classes correctly *)
@@ -464,7 +391,7 @@ let content_template header content =
     div ~a:[a_class ["flex justify-center items-center" ; "h-32"]] [header] ;
     div ~a:[a_class ["flex flex-row grow"]] [
       div ~a:[a_class ["sm:w-[10%]"]] [] ;
-      div ~a:[a_class ["grow" ; "bg-whnvr-900" ; "rounded border border-solid border-whnvr-300"]] [content] ;
+      div ~a:[a_class ["grow" ; "rounded border border-solid border-whnvr-800 dark:border-whnvr-300"]] [content] ;
       div ~a:[a_class ["sm:w-[10%]"]] [] ;
     ]
   ]
@@ -480,8 +407,8 @@ let content_template header content =
 let centered_template content =
   div ~a:[a_class ["absolute" ; "flex flex-col justify-center items-center" ; "h-full w-full"]] [
     div ~a:[a_class [
-      "bg-whnvr-900" ;
-      "rounded border border-solid border-whnvr-300" ;
+      "bg-whnvr-300 dark:bg-whnvr-900" ;
+      "rounded border border-solid border-whnvr-800 dark:border-whnvr-300" ;
       "h-[300px] w-[600px]" ;
     ]] [content] ;
   ]
@@ -505,15 +432,15 @@ let infinite_template left_content middle_content right_content =
   ]
 
 let standard_template main_content right_panel_content =
-  div ~a:[a_class ["bg-whnvr-800" ; "flex" ; "flex-row" ; "h-screen" ; "overflow-hidden"]] [
+  div ~a:[a_class ["dark:bg-whnvr-800" ; "flex" ; "flex-row" ; "h-screen" ; "overflow-hidden"]] [
     div ~a:[a_class ["p-4" ; "grow" ; "overflow-auto"]] [main_content] ;
     div ~a:[a_class [
-      "bg-whnvr-900" ;
+      "bg-whnvr-400 dark:bg-whnvr-900" ;
       "w-[400px]" ;
       "h-screen" ;
       "shadow-[-5px_0px_5px_rgba(0,0,0,0.2)]" ;
       "border-l" ;
-      "border-whnvr-950"
+      "border-whnvr-200 dark:border-whnvr-950"
     ]] [right_panel_content] ;
   ]
 
@@ -527,12 +454,12 @@ let left_column () =
 let right_column username =
   div ~a:[a_class ["h-full" ; "flex" ; "flex-col" ; "justify-between" ; "px-8" ]] [
     div ~a:[a_class ["flex" ; "flex-col" ; "items-center" ; "pt-4"]] [
-      h1 ~a:[a_class ["text-6xl" ; "text-white"]] [ txt "WHNVR"] ;
+      h1 ~a:[a_class ["text-6xl" ; "text-black dark:text-white"]] [ txt "WHNVR"] ;
       div ~a:[a_class [
         "w-[300px] h-[300px]" ;
         "mt-4 mb-4" ;
         "rounded-full" ;
-        "bg-whnvr-950" ;
+        "bg-whnvr-200 dark:bg-whnvr-950" ;
         "flex flex-row justify-center items-center" ;
         "text-4xl" ;
       ]] [

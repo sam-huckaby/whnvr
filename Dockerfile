@@ -1,3 +1,5 @@
+# Shamelessly based on this Dockerfile: https://github.com/Asya-kawai/blog/blob/main/20210603/how-to-create-minimum-ocaml-docker-image-en.md
+# TODO: See if it's possible to get this back to Alpine, since the current build is like 500 Mb
 FROM ocaml/opam:ubuntu-22.04-ocaml-5.0 AS init-opam
 
 RUN set -x && \

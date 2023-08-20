@@ -18,11 +18,6 @@ let fragments = [
     | Ok (posts) -> Dream.html (Builder.compile_elt_list (Builder.list_posts posts))
     | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return
   ) ;
-
-  Dream.get "/colorize" (fun _ ->
-    Dream.html (Builder.compile_elt (Builder.create_fancy_div ()))
-  ) ;
-
 ]
 
 let actions = [
