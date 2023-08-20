@@ -18,13 +18,24 @@ let feed_page_template request =
             "p-2" ;
           ] ;
           a_name "message" ;
+          a_required () ;
           a_placeholder "The void is listening, what will you say?" ;
           a_maxlength 420 ;
         ] (txt "") ;
         input ~a:[
-          a_class (Builder.button_styles @ ["w-full" ; "hover:bg-whnvr-300"]) ;
+          a_class (Builder.button_styles @ ["w-full" ; "hover:bg-whnvr-300" ; "disabled:hover:bg-whnvr-800 disabled:hover:cursor-not-allowed"]) ;
           a_input_type `Submit ;
-          a_value "Post"
+          a_disabled () ;
+          Builder.a_hx_typed Builder.Hx_ [
+            "on keyup from closest <form/>" ;
+              "for elt in <*:required/>" ;
+                "if the elt's value.length is less than 1" ;
+                  "add @disabled then exit" ;
+                "end" ;
+              "end" ;
+            "remove @disabled"
+          ] ;
+          a_value "Post" ;
         ] ()
       ] ;
     ] ;
