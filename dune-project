@@ -22,9 +22,9 @@
  (depends
    (ocaml (>= 5.0))
    (dune (>= 3.7))
-   (dream (>= 0))
+   (dream (>= 1.0))
    (tyxml (>= 4.5))
-   (petrol (>= 1.2.0))
+   (petrol (= "dev"))
    (lwt (>= 5.5))
    (caqti (>= 1.8.0))
    (caqti-lwt (>= 1.8.0))

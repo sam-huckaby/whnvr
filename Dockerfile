@@ -15,8 +15,6 @@ RUN set -x && \
     : "Install related pacakges" && \
     opam install . --deps-only --locked && \
     eval $(opam env) && \
-    : "Build Petrol, until it is updated in Opam" && \
-    unzip petrol-master.zip && cd petrol-master && dune build && opam pin -y . && cd ../ \
     : "Build applications" && \
     dune build && \
     sudo cp ./_build/default/bin/main.exe /usr/bin/main.exe && \
