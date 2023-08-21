@@ -29,6 +29,7 @@ let actions = [
           match (Dream.session_field request "id") with
           | Some id ->
             begin
+              let () = Dream.log "%f" (Unix.time () +. 86400.0) in
               let%lwt _ = Dream.sql request  (Database.create_post message (Int64.of_string id)) in 
               let%lwt posts = Dream.sql request Database.fetch_posts in
               match posts with

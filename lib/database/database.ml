@@ -131,19 +131,19 @@ let create_user username display_name secret db =
 
 (** ALL TIME IS IN GMT - BECAUSE IT IS - SO JUST LIKE, DEAL WITH THAT *)
 (** 30 days as a Ptime *)
-let login_time_update = 
+let login_time_update () = 
   let new_time = Ptime.of_float_s ((Unix.time ()) +. 2.592e+6) in 
   match new_time with
   | Some tm -> tm 
   | None -> Ptime.epoch
 (** 24 hours as a Ptime *)
-let post_ttl = 
+let post_ttl () = 
   let new_time = Ptime.of_float_s ((Unix.time ()) +. 86400.0) in 
   match new_time with
   | Some tm -> tm 
   | None -> Ptime.epoch
 (** The current time as a Ptime *)
-let ptime_now =
+let ptime_now () =
   let today = Ptime.of_float_s (Unix.time ()) in 
   match today with
   | Some tm -> tm
@@ -162,7 +162,7 @@ let authenticate username secret db =
       begin
         match user_opt with
         | Some (id, (username, _)) -> begin
-          let%lwt _ = Query.update ~set:Expr.[ Users.expires := vl ~ty:Type.time ptime_now ] ~table:Users.table
+          let%lwt _ = Query.update ~set:Expr.[ Users.expires := vl ~ty:Type.time (ptime_now ()) ] ~table:Users.table
         |> Query.where Expr.( Users.id = vl ~ty:Type.big_int id )
         |> Request.make_zero
         |> Petrol.exec db in
@@ -176,8 +176,8 @@ let create_post message user_id db =
   Query.insert ~table:Posts.table ~values:(Expr.[
     Posts.message := s message ;
     Posts.user_id := vl ~ty:Type.big_int user_id ;
-    Posts.expires := vl ~ty:Type.time post_ttl ;
-    Posts.created := vl ~ty:Type.time ptime_now ;
+    Posts.expires := vl ~ty:Type.time (post_ttl ()) ;
+    Posts.created := vl ~ty:Type.time (ptime_now ()) ;
   ])
   |> Request.make_zero
   |> Petrol.exec db
@@ -208,7 +208,7 @@ let paginated_posts last_post_id db direction =
       ] 
     )
   |> Query.where Expr.(Posts.id < Expr.(vl ~ty:Type.big_int last_post_id))
-  |> Query.where Expr.(Posts.expires > vl ~ty:Type.time ptime_now )
+  |> Query.where Expr.(Posts.expires > vl ~ty:Type.time (ptime_now ()) )
   |> Query.order_by ~direction Posts.id
   |> Query.limit Expr.(i page_size)
   |> Request.make_many
@@ -243,7 +243,7 @@ let fetch_posts db =
         display_name ;
       ] 
     )
-  |> Query.where Expr.(Posts.expires > vl ~ty:Type.time ptime_now)
+  |> Query.where Expr.(Posts.expires > vl ~ty:Type.time (ptime_now ()))
   |> Query.limit Expr.(i page_size) (* TODO: Up to 100 after testing *)
   |> Query.order_by Posts.id ~direction:`DESC
   |> Request.make_many
@@ -274,7 +274,7 @@ let print_fetch_posts =
         display_name ;
       ] 
     )
-  |> Query.where Expr.(Posts.expires > vl ~ty:Type.time ptime_now)
+  |> Query.where Expr.(Posts.expires > vl ~ty:Type.time (ptime_now ()))
   |> Query.limit Expr.(i page_size) (* TODO: Up to 100 after testing *)
   |> Query.order_by Posts.id ~direction:`DESC
   |> Format.asprintf "%a" Query.pp;;
