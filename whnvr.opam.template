@@ -1,0 +1,3 @@
+pin-depends: [
+  [ "petrol.dev" "git+https://github.com/Gopiandcode/petrol#e83d3c833b98a3a915949651316a04469417d7f5"]
+]
