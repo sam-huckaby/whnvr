@@ -1,0 +1,3 @@
+[submodule "vendor/petrol"]
+	path = vendor/petrol
+	url = git@github.com:tjdevries/petrol.git

@@ -24,7 +24,7 @@
    (dune (>= 3.7))
    (dream (>= 1.0))
    (tyxml (>= 4.5))
-   (petrol (= "dev"))
+   petrol
    (lwt (>= 5.5))
    (caqti (>= 1.8.0))
    (caqti-lwt (>= 1.8.0))
