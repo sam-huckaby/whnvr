@@ -18,7 +18,8 @@ should urge the common reader to enjoy but investigate - take nothing at face va
 ### Step 1: Database
 Currently the only tested database is PostgreSQL, but in theory SQLite should work as well.
 
-You will need to set the following environment varibales before starting WHNVR:
+WHNVR leverages a .env file to populate secrets (because we aren't barbarians).
+You will need to set the following environment variables in .env or via direct export before starting WHNVR:
 - `DB_HOST` -> The host of the database instance
 - `DB_PORT` -> The port that the database is using
 - `DB_NAME` -> The name of the database

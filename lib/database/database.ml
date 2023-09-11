@@ -284,13 +284,20 @@ let get_posts next_id db =
   | Some id -> next_posts_page (Int64.of_string id) db
   | None -> fetch_posts db
 
-let connection_string =
+exception EnvVarNotFound of string
+
+let get_env_value var_name =
+  match Sys.getenv_opt var_name with
+  | Some value -> value  
+  | None -> raise (EnvVarNotFound ("Environment variable " ^ var_name ^ " not set"))
+
+let connection_string () =
   (* Important note: These will throw `Not_found if the variables are not set, preventing execution *)
-  let host = Unix.getenv "DB_HOST" in
-  let port = Unix.getenv "DB_PORT" in
-  let name = Unix.getenv "DB_NAME" in
-  let user = Unix.getenv "DB_USER" in
-  let pass = Unix.getenv "DB_PASS" in 
+  let host = get_env_value "DB_HOST" in
+  let port = get_env_value "DB_PORT" in
+  let name = get_env_value "DB_NAME" in
+  let user = get_env_value "DB_USER" in
+  let pass = get_env_value "DB_PASS" in 
   "postgresql://" ^ user ^ ":" ^ pass ^ "@" ^ host ^ ":" ^ port ^ "/" ^ name
 
 (* I borrowed this function from github:gopiandcode/ocamlot *)

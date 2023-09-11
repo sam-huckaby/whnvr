@@ -1,3 +1,8 @@
+# Obviously, don't commit build artifacts
 _build
 
+# Don't commit the tailwind executable
 tailwindcss
+
+# Don't commit my previous .env
+.env

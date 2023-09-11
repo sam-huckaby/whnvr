@@ -112,13 +112,14 @@ let auth_middleware next request =
           next request
 
 let () =
-  match Database.init_database ~force_migrations:true (Uri.of_string Database.connection_string) with
+  Dotenv.export () |> ignore;
+  match Database.init_database ~force_migrations:true (Uri.of_string @@ Database.connection_string ()) with
   | Error (`Msg err) -> Format.printf "Error: %s" err
   | Ok () ->
   Dream.run ~interface:"0.0.0.0"
   @@ Dream.logger
   (* TODO: Make the rest of this connection string configurable *)
-  @@ Dream.sql_pool Database.connection_string
+  @@ Dream.sql_pool (Database.connection_string ())
   (* Sessions last exactly as long as a user does, if a user has not logged in after this period they are deleted *)
   @@ Dream.sql_sessions ~lifetime:2.592e+6
   @@ Dream.router (

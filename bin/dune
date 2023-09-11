@@ -1,5 +1,5 @@
 (executable
  (public_name whnvr)
  (name main)
- (libraries dream tyxml database builder handler utils whnvr)
+ (libraries dotenv dream tyxml database builder handler utils whnvr)
  (preprocess (pps lwt_ppx)))
