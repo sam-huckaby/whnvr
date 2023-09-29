@@ -45,4 +45,17 @@ You can start WHNVR via dune:
 dune exec whnvr
 ```
 
-This will start the app on port 8080
+This will start the app on port 8080.
+
+I am playing with Dune rules at the moment to use bun to generate a build version of my various JS files that I use to invoke passkey functions.
+the stanze `(deps (universe))` in the base dune file ensures that the rule is always run, even if it is not necessary. It may be removed at a 
+later time to allow dune to skip build steps that are unnecessary.
+
+### ESBuild
+In order to build the limited JS code we use, we need to run a bundler. This is important for leveraging the Beyond Identity JS SDK. In order to
+do that, you can run
+```
+node esbuild.config.mjs
+```
+And it will start a process in the background that will catch changes to any scripts.
+_NOTE:_ You will need to add any new scripts you introduce to this config, so that the bundler will actually pick it up.

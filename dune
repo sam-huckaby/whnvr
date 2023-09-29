@@ -1,0 +1,13 @@
+(rule
+  (alias buninstall)
+  (deps (universe))
+  (action (run bun install)))
+
+(rule
+  (alias tailwind)
+  (action (run ./tailwindcss -i ../../www/static/global.css -o ../../www/static/build.css -c ../../tailwind.config.js)))
+
+(rule
+  (alias esbuild)
+  (action (run ./node_modules/.bin/esbuild www/static/bind_new_passkey.js --bundle --outfile=www/static/bind_new_passkey.dist.js)))
+

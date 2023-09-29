@@ -29,7 +29,6 @@ let actions = [
           match (Dream.session_field request "id") with
           | Some id ->
             begin
-              let () = Dream.log "%f" (Unix.time () +. 86400.0) in
               let%lwt _ = Dream.sql request  (Database.create_post message (Int64.of_string id)) in 
               let%lwt posts = Dream.sql request Database.fetch_posts in
               match posts with
@@ -53,12 +52,31 @@ let no_auth_routes = [
     Dream.html page
   ) ;
 
+  Dream.get "/missing" (fun request ->
+    let%lwt page = (Handler.generate_page Missing request) in
+    Dream.html page
+  ) ;
+
   Dream.get "/login" (fun request ->
     let%lwt page = (Handler.generate_page Login request) in
     Dream.html page
   ) ;
 
+  Dream.get "/delete-passkey" (fun _ ->
+    Dream.html (Builder.compile_elt (Builder.passkey_list true))
+  ) ;
+
+  Dream.get "/create-account" (fun request ->
+    Dream.html (Builder.compile_elt (Builder.account_form request))
+  ) ;
+
+  Dream.get "/upgrade-to-passkey" (fun request ->
+    Dream.html (Builder.compile_elt (Builder.password_destroyer request))
+  ) ;
+
   (** Handle a login attempt by either creating an account or requesting a password *)
+  (* TODO: Remove this after repurposing contents into passkey conversion endpoint *)
+  (*
   Dream.post "/engage" (fun request ->
     match%lwt Dream.form request with
     | `Ok form ->
@@ -78,35 +96,130 @@ let no_auth_routes = [
       end
     | _ -> Dream.response (Builder.error_page "Bad payload from the login form") |> Lwt.return
   ) ;
+  *)
 
-  (** Handle an authentication request for a username that exists in the DB already *)
-  Dream.post "/authenticate" (fun request ->
+  Dream.post "/passkey-upgrade" (fun request ->
     match%lwt Dream.form request with
     | `Ok form ->
         begin
           let (_, username) = Utils.find_list_item form "username" in 
-          let (_, secret) = Utils.find_list_item form "secret" in 
+          let (_, secret) = Utils.find_list_item form "password" in 
+          let (_, email) = Utils.find_list_item form "email" in 
+          (* Validate the old username/password combination before migrating to a passkey *)
           let%lwt found_user = Dream.sql request (Database.authenticate username secret) in
           match found_user with
           | Some (id, username) ->
-              let%lwt () = Dream.invalidate_session request in 
-              let%lwt () = Dream.set_session_field request "id" id in
-              let%lwt () = Dream.set_session_field request "username" username in
-              Lwt.return (Dream.response ~headers:[("HX-Redirect", "/")] ~code:200 "Boy-Howdy")
+            begin
+              (* Create an identity in Beyond Identity's System *)
+              let%lwt identity_json = Auth.create_identity username username email in
+              match identity_json with
+              | Some json ->
+                  begin
+                    let identity_id = Utils.get_json_key json "id" in
+                    (* Update the WHNVR DB record with the BI user ID *)
+                    let%lwt update_result = Dream.sql request (Database.give_user_bi_id (Int64.of_string id) identity_id) in
+                    match update_result with
+                    | Result.Ok () -> 
+                      (* Generate a credential binding url for the current device *)
+                      let%lwt binding_job_json = Auth.get_credential_binding_url identity_id in
+                      let binding_url = Utils.get_json_key binding_job_json "credential_binding_link" in
+
+                      (* Kill any lingering session information and send the upgraded user to login with their new passkey *)
+                      let%lwt () = Dream.invalidate_session request in 
+                      Dream.html (Builder.compile_elt (Builder.enroll_dialog false username binding_url))
+                    | _ ->
+                      Lwt.return (Dream.response ~headers:[("HX-Redirect", "/login")] ~code:200 "Oof, failure")
+                  end
+              | None -> Lwt.return (Dream.response ~headers:[("HX-Redirect", "/login?error=User%20was%20already%20upgraded")] ~code:200 "Oof, failure")
+            end
           | None -> 
               let%lwt () = Dream.invalidate_session request in 
               Lwt.return (Dream.response ~headers:[("HX-Redirect", "/login?error=Passphrase%20was%20incorrect")] ~code:404 "Skill Issue")
         end
     | _ -> Dream.response (Builder.error_page "Bad payload from the login form") |> Lwt.return
   ) ;
+
+  (** Initiate authentication via passkey *)
+  Dream.get "/authenticate" (fun request ->
+    Dream.html (Builder.compile_elt (Builder.authenticate_dialog request))
+  ) ;
+
+  (** Initiate the token exchange process to complete an authentication request via passkey *)
+  Dream.get "/auth/callback" (fun request ->
+    let%lwt (access_token, id_token) = Auth.exchange_token request in
+    (* Shoutout to: https://www.shawntabrizi.com/aad/decoding-jwt-tokens/ *)
+    let jwt_package = match (String.split_on_char '.' id_token) with
+    (* We do this, because the id_token has headers, a package, and a signature, and we only realy care about the package (for now) *)
+    | [_ ; value ; _] -> value
+    | _ -> "" in
+
+    (* Unwrap the JWT and store the values needed in the session *)
+    let json_package = Base64.decode ~pad:false (Utils.replace_chars jwt_package) |> Result.get_ok in
+    let user_id = Utils.get_json_key json_package "sub" in
+    let user_name = Utils.get_json_key json_package "name" in
+    let user_display = Utils.get_json_key json_package "preferred_username" in
+
+    (* Get the user's WHNVR ID *)
+    let%lwt retrieved = Dream.sql request (Database.get_user_by_byndid user_id) in
+    let whnvr_id = match retrieved with
+    | Some (found, _) -> found
+    | None -> Int64.of_string "0" in
+
+    let%lwt () = Dream.invalidate_session request in 
+    let%lwt () = Dream.set_session_field request "access_token" access_token in
+    let%lwt () = Dream.set_session_field request "byndid_id" user_id in
+    let%lwt () = Dream.set_session_field request "id" (Int64.to_string whnvr_id) in
+    let%lwt () = Dream.set_session_field request "username" user_name in
+    let%lwt () = Dream.set_session_field request "display_name" user_display in
+    Dream.redirect request ~code:302 "/"
+  ) ;
+
+  (** The standard enrollment route. Accomplishes the following:
+    * - Accept a username and email
+    * - create a user in Beyond Identity
+    * - Create a user in WHNVR that points to BI
+    * - Bind new passkey to device
+    * - Return the user to login so they can use their passkey
+    *
+    * Sending users back to login is necessary, but also helps solidify
+    * in their memory how the process of using a passkey should look. *)
+  Dream.post "/enroll" (fun request ->
+    (* Receive user info from form on login *)
+    match%lwt Dream.form request with
+    | `Ok form -> (
+          (* Retrieve form data using my jank Util *)
+          let (_, username) = Utils.find_list_item form "username" in 
+          let (_, email) = Utils.find_list_item form "email" in 
+
+          (* Create an identity in Beyond Identity's System *)
+          let%lwt identity_json = Auth.create_identity username username email in
+          match identity_json with
+          | Some json ->
+              begin
+                let identity_id = Utils.get_json_key json "id" in
+
+                (* Generate a credential binding url for the current device *)
+                let%lwt binding_job_json = Auth.get_credential_binding_url identity_id in
+                let binding_url = Utils.get_json_key binding_job_json "credential_binding_link" in
+
+                (* Create a user in the WHNVR DB *)
+                let%lwt creation = Dream.sql request (Database.create_user username username identity_id) in
+                match creation with
+                | Ok (_) -> Dream.html (Builder.compile_elt (Builder.enroll_dialog true username binding_url))
+                | Error err -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return
+              end
+          | None -> Lwt.return (Dream.response ~headers:[("HX-Redirect", "/login?error=Username%20is%20already%20taken")] ~code:200 "Maybe think faster next time")
+    )
+    | _ -> Dream.response (Builder.error_page "Invalid login payload received") |> Lwt.return
+  ) ;
 ]
 
 let auth_middleware next request =
-      match Dream.session_field request "id" with
+      (* Check for the existence of a BI access token - this will invalidate any previously logged in people with passwords *)
+      match Dream.session_field request "access_token" with
       | None ->
-          (* Invalidate this session, to prevent session fixation attacks *)
+          (* Invalidate this session, to prevent session fixation attacks before sending them back to login *)
           let%lwt () = Dream.invalidate_session request in 
-          (*Lwt.return (Dream.response ~headers:[("HX-Redirect", "/login")] ~code:302 "Hello, Friend")*)
           Dream.redirect request ~code:302 "/login"
       | Some _ ->
           next request

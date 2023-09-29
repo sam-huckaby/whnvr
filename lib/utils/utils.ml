@@ -18,3 +18,16 @@ let ugly_password_generator () =
   in 
   octet () ^ "-" ^ octet () ^ "-" ^ octet ()
 
+let replace_chars str =
+  let replace_char c =
+    match c with
+    | '-' -> '+'
+    | '_' -> '/'
+    | _ -> c
+  in
+  String.map replace_char str
+
+let get_json_key json key =
+  let open Yojson.Basic.Util in
+  let parsed = Yojson.Basic.from_string json in
+  parsed |> member key |> to_string

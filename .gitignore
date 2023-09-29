@@ -4,5 +4,8 @@ _build
 # Don't commit the tailwind executable
 tailwindcss
 
-# Don't commit my previous .env
+# Don't commit my .env
 .env
+
+# Don't keep node_modules
+node_modules

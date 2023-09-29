@@ -7,17 +7,36 @@ let hex_of_string s =
   String.iter (fun c -> Printf.bprintf result "%02x" (int_of_char c)) s;
   Buffer.contents result
 
+(** ALL TIME IS IN GMT - BECAUSE IT IS - SO JUST LIKE, DEAL WITH THAT *)
+(** 30 days as a Ptime *)
+let login_time_update () = 
+  let new_time = Ptime.of_float_s ((Unix.time ()) +. 2.592e+6) in 
+  match new_time with
+  | Some tm -> tm 
+  | None -> Ptime.epoch
+(** 24 hours as a Ptime *)
+let post_ttl () = 
+  let new_time = Ptime.of_float_s ((Unix.time ()) +. 86400.0) in 
+  match new_time with
+  | Some tm -> tm 
+  | None -> Ptime.epoch
+(** The current time as a Ptime *)
+let ptime_now () =
+  let today = Ptime.of_float_s (Unix.time ()) in 
+  match today with
+  | Some tm -> tm
+  | None -> Ptime.epoch
+
 (* WHNVR schema version 1.0.0 *)
 let v_0_0_1 = VersionedSchema.version [0;0;1]
 let v_0_0_2 = VersionedSchema.version [0;0;2]
 let v_0_0_3 = VersionedSchema.version [0;0;3]
 
 (* init the schema using the above version *)
-let schema = VersionedSchema.init v_0_0_2 ~name:"whnvr"
+let schema = VersionedSchema.init v_0_0_3 ~name:"whnvr"
 
-(* TODO: Up this to 100 after testing *)
 (** Configurable page size for infinite scroll *)
-let page_size = 10
+let page_size = 100
 
 (* TODO: Move individual table modules into separate files *)
 
@@ -34,23 +53,32 @@ end
 
 (* declare a table, returning the table name and fields *)
 module Users = struct
-  let table, Expr.[id ; username ; display_name ; expires ; secret] =
+  let table, Expr.[id ; username ; display_name ; expires ; secret ; bi_user_id] =
     VersionedSchema.declare_table schema ~name:"users"
       Schema.[
         field ~constraints:[primary_key ()] "id" ~ty:Type.big_serial ;
-        field "username" ~ty:Type.(character_varying 32) ~constraints:[not_null ()] ;
-        field "display_name" ~ty:Type.(character_varying 32) ~constraints:[not_null ()] ;
+        field "username" ~ty:Type.(character_varying 32) ~constraints:[not_null ()] ; (* Beyond Identity handles this now *)
+        field "display_name" ~ty:Type.(character_varying 32) ~constraints:[not_null ()] ; (* Beyond Identity handles this now *)
         field "expires" ~ty:Type.time ~constraints:[not_null ()] ;
-        field "secret" ~ty:Type.bytea ~constraints:[not_null ()] ;
+        field "secret" ~ty:Type.bytea ; (* Beyond Identity handles this now *)
+        field "bi_user_id" ~ty:Type.(character_varying 32) ;
       ]
-      ~migrations:[v_0_0_2, [
+      ~migrations:[
+        v_0_0_2, [
           Caqti_request.Infix.(Caqti_type.unit ->. Caqti_type.unit)
             {sql| ALTER TABLE users ALTER COLUMN expires SET DEFAULT (now() + '00:05:00'::interval) |sql} ;
           Caqti_request.Infix.(Caqti_type.unit ->. Caqti_type.unit)
             {sql| ALTER TABLE users ALTER COLUMN expires TYPE character varying USING expires::character varying |sql} ;
           Caqti_request.Infix.(Caqti_type.unit ->. Caqti_type.unit)
             {sql| ALTER TABLE users ALTER COLUMN expires TYPE timestamp without time zone USING expires::timestamp without time zone |sql} ;
-        ]]
+        ] ;
+        v_0_0_3, [
+          Caqti_request.Infix.(Caqti_type.unit ->. Caqti_type.unit)
+            {sql| ALTER TABLE users ADD COLUMN bi_user_id CHARACTER VARYING |sql} ;
+          Caqti_request.Infix.(Caqti_type.unit ->. Caqti_type.unit)
+            {sql| ALTER TABLE users ALTER COLUMN secret DROP NOT NULL |sql}
+        ]
+      ]
 end
 
 (* declare a table, returning the table name and fields *)
@@ -117,37 +145,33 @@ let find_user username db =
   | Ok user -> Lwt.return user
   | Error err -> Lwt.return (Some ((Caqti_error.show err), ()))
 
-(** Creating a user only sets these key fields. Everything else is set dynamically elsewhere. *)
-let create_user username display_name secret db =
-  let sha3 = Hash.sha3 256 in
-  let hashed = hash_string sha3 secret in
-  Query.insert ~table:Users.table ~values:(Expr.[
-    Users.username := s username ;
-    Users.display_name := s display_name ;
-    Users.secret := s (hex_of_string hashed) ;
-  ])
+let give_user_bi_id whnvr_id beyond_identity_id db =
+  Query.update ~table:Users.table ~set:Expr.[ Users.bi_user_id := vl ~ty:Type.(character_varying 32) beyond_identity_id ]
+  |> Query.where Expr.( Users.id = vl ~ty:Type.big_int whnvr_id )
   |> Request.make_zero
   |> Petrol.exec db
 
-(** ALL TIME IS IN GMT - BECAUSE IT IS - SO JUST LIKE, DEAL WITH THAT *)
-(** 30 days as a Ptime *)
-let login_time_update () = 
-  let new_time = Ptime.of_float_s ((Unix.time ()) +. 2.592e+6) in 
-  match new_time with
-  | Some tm -> tm 
-  | None -> Ptime.epoch
-(** 24 hours as a Ptime *)
-let post_ttl () = 
-  let new_time = Ptime.of_float_s ((Unix.time ()) +. 86400.0) in 
-  match new_time with
-  | Some tm -> tm 
-  | None -> Ptime.epoch
-(** The current time as a Ptime *)
-let ptime_now () =
-  let today = Ptime.of_float_s (Unix.time ()) in 
-  match today with
-  | Some tm -> tm
-  | None -> Ptime.epoch
+let get_user_by_byndid byndid_id db =
+  let%lwt found = Query.select ~from:Users.table
+  Expr.[
+    Users.id
+  ]
+  |> Query.where Expr.( Users.bi_user_id = s byndid_id)
+  |> Request.make_zero_or_one
+  |> Petrol.find_opt db in 
+  match found with
+  | Ok user -> Lwt.return user 
+  | Error _ -> Lwt.return (Some (Int64.of_string "0", ()))
+
+(** Creating a user only sets these key fields. Everything else is set dynamically elsewhere. *)
+let create_user username display_name beyond_identity_id db =
+  Query.insert ~table:Users.table ~values:(Expr.[
+    Users.username := s username ;
+    Users.display_name := s display_name ;
+    Users.bi_user_id := s beyond_identity_id ;
+  ])
+  |> Request.make_zero
+  |> Petrol.exec db
 
 let authenticate username secret db =
   let sha3 = Hash.sha3 256 in

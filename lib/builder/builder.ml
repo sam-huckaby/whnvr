@@ -62,7 +62,8 @@ let a_hx name = Tyxml.Html.Unsafe.space_sep_attrib ("hx-" ^ name)
 
 (** Some standard button styles *)
 let button_styles =
-  ["border rounded border-whnvr-800 dark:border-whnvr-300" ; "text-whnvr-800 dark:text-whnvr-300" ; "hover:bg-whnvr-200 dark:hover:bg-whnvr-950" ; "cursor-pointer" ; "px-4" ; "py-2"]
+  ["border rounded border-whnvr-800 dark:border-whnvr-300" ; "text-whnvr-800 dark:text-whnvr-300" ; "ease-in duration-200" ; "hover:bg-whnvr-300 dark:hover:bg-whnvr-950" ; "cursor-pointer" ; "px-4" ; "py-2"]
+let input_styles = ["border rounded border-whnvr-800 dark:border-whnvr-300" ; "outline-0" ; "bg-whnvr-200 dark:bg-whnvr-800 placeholder-neutral-500 dark:placeholder-whnvr-300"]
 let submit =
     Html.[input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Submit"] () ]
 
@@ -193,43 +194,55 @@ let error_page message =
     ])
   )
 
-let login_dialog request =
-  let error = Dream.query request "error" in
-  div ~a:[a_class [
-    "rounded" ;
-    "w-full h-full" ;
-    "flex flex-col items-center justify-center" ;
-    "p-8"
-  ]] [
+let passkey_list rm = 
+  let loader = match rm with
+    | true -> script ~a:[a_src (Xml.uri_of_string "/static/list_passkeys_to_delete.dist.js")] (txt "")
+    | false -> script ~a:[a_src (Xml.uri_of_string "/static/load_passkeys.dist.js")] (txt "") in
+    div ~a:[a_class [
+      "w-full py-2 mt-2 max-w-[400px]" ;
+      "flex flex-col items-center justify-start" ;
+      "max-h-[350px] overflow-auto" ;
+    ] ; a_id "passkey_container" ] [
+      div ~a:[
+        a_class [
+          "rounded-full border-2 border-whnvr-800 dark:border-whnvr-300 border-t-transparent dark:border-t-transparent border-solid animate-spin" ;
+          "w-[50px] h-[50px]" ;
+        ] ;
+        a_id "passkey_loader" ;
+      ] [] ;
+      loader ;
+    ] 
+
+let account_form request =
     form ~a:[
-      a_class ["flex flex-col justify-center items-center"] ;
-      a_hx_typed Post ["/engage"] ;
+      a_class ["flex flex-col justify-center items-center w-full"] ;
+      a_hx_typed Post ["/enroll"] ;
       a_hx_typed ReplaceUrl ["/login"] ;
       a_name "login_form" ;
     ] [
-      (Dream.csrf_tag request) |> Unsafe.data ;
       h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
-      p ~a:[a_class ["text-center" ; "pt-2"]] [ txt "Who will be screaming into the void today?" ] ;
-      div ~a:[a_class ["p-4" ; "flex" ; "flex-col"]] [
+      p ~a:[a_class ["text-center" ; "pt-2"]] [ txt "Join us" ] ;
+      (Dream.csrf_tag request) |> Unsafe.data ;
+      div ~a:[a_class ["p-4" ; "flex" ; "flex-col" ; "w-full"] ; a_id "enroll_form"] [
         input ~a:[
           a_input_type `Text ;
           a_required () ;
-          a_class [
-            "bg-neutral-300 dark:bg-neutral-700" ;
-            "outline-0" ;
-            "p-2" ;
-            "border-b border-b-solid border-whnvr-900 dark:border-whnvr-100" ;
-          ] ;
+          a_class (input_styles @ [
+            "mb-2" ;
+          ]) ;
           a_name "username" ;
           a_placeholder "username" ;
         ] () ;
+        input ~a:[
+          a_input_type `Text ;
+          a_required () ;
+          a_class input_styles ;
+          a_name "email" ;
+          a_placeholder "email" ;
+        ] () ;
       ] ;
-        (
-          match error with
-          | Some err -> p ~a:[a_class ["text-red-600"]] [ txt err ]
-          | None -> p []
-        ) ;
-      div ~a:[a_class ["p-4"]] [
+      div ~a:[a_class ["p-4 flex flex-row justify-around w-full max-w-[300px]"] ; a_id "continue_button"] [
+        a ~a:[a_class button_styles ; a_href "/login"] [ txt "Back to login" ] ;
         input ~a:[
           a_input_type `Submit ;
           a_class button_styles ;
@@ -246,74 +259,220 @@ let login_dialog request =
           ]
         ] () ;
       ] ;
-      a ~a:[a_href (Xml.uri_of_string "/hello") ; a_class ["underline"]] [ txt "What is this place?" ] ;
-    ] ;
-  ]
+    ]
 
-let access_dialog request found_user = 
+let password_destroyer request =
     form ~a:[
-      a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
-      a_hx_typed Post ["/authenticate"] ;
-      a_name "access_form" ;
+      a_class ["flex flex-col justify-center items-center w-full"] ;
+      a_hx_typed Post ["/passkey-upgrade"] ;
+      a_hx_typed ReplaceUrl ["/login"] ;
+      a_name "login_form" ;
     ] [
+      h1 ~a:[a_class ["mt-4 text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+      p ~a:[a_class ["text-center" ; "pt-2"]] [ txt "WHNVR has migrated to using passkeys as a more secure login method." ] ;
+      p ~a:[a_class ["text-center" ; "pt-2"]] [ txt "This form will convert your password to a passkey on this device." ] ;
       (Dream.csrf_tag request) |> Unsafe.data ;
-      h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
-      p ~a:[a_class ["text-center" ; "pt-2"]] [ txt ("User \"" ^ found_user ^ "\" found! Enter your passphrase.") ] ;
-      div ~a:[a_class ["p-4"]] [
+      div ~a:[a_class ["p-4" ; "flex" ; "flex-col" ; "w-full"] ; a_id "enroll_form"] [
+        input ~a:[
+          a_input_type `Text ;
+          a_required () ;
+          a_class (input_styles @ [
+            "mb-2" ;
+          ]) ;
+          a_name "username" ;
+          a_placeholder "username" ;
+        ] () ;
         input ~a:[
           a_input_type `Password ;
-          a_class [
-            "bg-neutral-300 dark:bg-neutral-700" ;
-            "outline-0" ;
-            "p-2" ;
-            "border-b" ;
-            "border-b-solid" ;
-            "border-whnvr-900 dark:border-whnvr-100" ;
-          ] ;
-          a_name "secret"
+          a_required () ;
+          a_class (input_styles @ [
+            "mb-2" ;
+          ]) ;
+          a_name "password" ;
+          a_placeholder "password" ;
         ] () ;
         input ~a:[
-          a_input_type `Hidden ;
-          a_name "username" ;
-          a_value found_user ;
+          a_input_type `Text ;
+          a_required () ;
+          a_class input_styles ;
+          a_name "email" ;
+          a_placeholder "email" ;
         ] () ;
+        span ~a:[a_class ["text-whnvr-600 dark:text-whnvr-300"]] [ txt "Needed for account recovery and extension" ]
       ] ;
-      div ~a:[a_class ["p-4"]] [
-        input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Continue"] () ;
-      ] ;
-      p [
-        a ~a:[a_class ["underline"] ; a_href (Xml.uri_of_string "/login")] [ txt "Back to login" ] ;
+      div ~a:[a_class ["p-4 flex flex-row justify-around w-full max-w-[400px]"] ; a_id "continue_button"] [
+        a ~a:[a_class button_styles ; a_href "/login"] [ txt "Back to login" ] ;
+        input ~a:[
+          a_input_type `Submit ;
+          a_class button_styles ;
+          a_value "Convert to passkey" ;
+          a_disabled () ;
+          a_hx_typed Hx_ [
+            "on keyup from closest <form/>" ;
+              "for elt in <*:required/>" ;
+                "if the elt's value.length is less than 5" ;
+                  "add @disabled then exit" ;
+                "end" ;
+              "end" ;
+            "remove @disabled"
+          ]
+        ] () ;
       ] ;
     ]
 
-(** The enroll dialog needs to receive a new secret key that can be displayed
- * a single time to the user, for them to use going forward. Users will never
- * set their own passwords, and when I have time, I will build a library to 
- * use Beyond Identity's passkeys because passwords are the devil. *)
-let enroll_dialog new_name new_secret = 
+let login_dialog request =
+  let error = Dream.query request "error" in 
+  let err = match error with
+            | Some err -> err
+            | None -> "" in
+  let () = Dream.log "%s" err in
+  div ~a:[
+    a_class [
+      "rounded" ;
+      "w-full h-full" ;
+      "flex flex-col items-center justify-center" ;
+      "p-8"
+    ] ;
+    a_id "main_login_container"
+  ] [
+    h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+    p ~a:[a_class ["text-center" ; "pt-2"]] [ txt "Who will be screaming into the void today?" ] ;
+    p ~a:[a_class ["text-center text-red-600 font-bold" ; "pt-2"] ; a_id "login_error_msg"] [ txt err ] ;
+    (* Passkey tiles are loaded into this div *)
+    passkey_list false ;
+    a ~a:[
+      a_class ["underline hover:no-underline cursor-pointer"] ;
+      a_id "password_destroyer_link" ;
+      a_hx_typed Get ["/upgrade-to-passkey"] ;
+      a_hx_typed Target ["#main_login_container"] ;
+      a_hx_typed Swap ["outerHTML"] ;
+    ] [ txt "I have a password" ] ;
+    div ~a:[a_class ["flex flex-row flex-wrap justify-center items-center"] ; a_id "login_links"] [
+      div ~a:[a_class ["w-1/2 my-4 flex flex-row justify-center items-center"]] [
+        a ~a:[a_href (Xml.uri_of_string "/hello") ; a_class ["underline hover:no-underline"]] [ txt "What is this place?" ]
+      ] ;
+      div ~a:[a_class ["w-1/2 my-4 flex flex-row justify-center items-center"]] [
+        a ~a:[a_href (Xml.uri_of_string "/missing") ; a_class ["underline hover:no-underline"]] [ txt "I don't see my account" ] ;
+      ] ;
+      div ~a:[a_class ["w-1/2 my-4 flex flex-row justify-center items-center"]] [
+        button ~a:[
+          a_class ["underline hover:no-underline"] ;
+          a_id "delete_passkey_link" ;
+          a_hx_typed Get ["/delete-passkey"] ;
+          a_hx_typed Target ["#passkey_container"] ;
+          a_hx_typed Swap ["innerHTML"] ;
+        ] [ txt "Delete a passkey" ] ;
+      ] ;
+      div ~a:[a_class ["w-1/2 my-4 flex flex-row justify-center items-center"]] [
+        button ~a:[
+          a_class ["underline hover:no-underline"] ;
+          a_hx_typed Get ["/create-account"] ;
+          a_hx_typed Target ["#main_login_container"] ;
+          a_hx_typed Swap ["innerHTML"] ;
+        ] [ txt "Create an account" ] ;
+      ] ;
+    ] ;
+    div ~a:[a_class ["flex flex-row flex-wrap justify-center items-center w-full" ; "hidden"] ; a_id "delete_links"] [
+      div ~a:[a_class ["w-1/2 my-4 flex flex-row justify-center items-center"]] [
+        a ~a:[a_href (Xml.uri_of_string "/login") ; a_class ["underline hover:no-underline"]] [ txt "Back to login" ]
+      ] ;
+    ] ;
+  ]
+
+(** The enroll dialog needs to receive a new credential binding link that can
+ * be used by the binding script on the page to setup a passkey on the current
+ * device for the user to use going forward. *)
+let enroll_dialog is_new new_name binding_url = 
+    (* It's a little confusing for users if they are upgrading from a password and it says it created a new account... *)
+    let creation_text = match is_new with
+    | true -> (p ~a:[a_class ["mb-2"]] [ txt ("Created account for '" ^ new_name ^ "'!") ])
+    | false -> (p ~a:[a_class ["mb-2"]] [ txt ("Created passkey for '" ^ new_name ^ "'!") ]) in
+
+    let self_destruct_text = match is_new with
+    | true -> (p ~a:[a_class ["mt-2"]] [ txt "This user will self-destruct in 5 minutes if it does not login." ])
+    | false -> (p ~a:[a_class ["mt-2"]] [ txt "Please return to login to try it out." ]) in
+
     div ~a:[
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
     ] [
-      h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+      h1 ~a:[a_class ["mt-4 text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+      div ~a:[a_class ["p-4" ; "text-center text-whnvr-950 dark:text-whnvr-100"]] [
+        creation_text ;
+        self_destruct_text ;
+        input ~a:[
+          a_input_type `Hidden ;
+          a_name "binding_url" ;
+          a_id "binding_url" ;
+          a_value binding_url ;
+        ] () ;
+      ] ;
+      div ~a:[a_class ["mb-4 rounded-full border-2 border-solid border-whnvr-400 border-t-transparent animate-spin h-[50px] w-[50px]"] ; a_id "bind_passkey_loader"] [] ;
+      div ~a:[a_class ["mb-4 p-4 hidden"] ; a_id "bind_passkey_continue"] [
+        a ~a:[a_href "/login" ; a_class button_styles] [ txt "Continue" ]
+      ] ;
+      script ~a:[a_src (Xml.uri_of_string "/static/bind_new_passkey.dist.js")] (txt "") ;
+    ]
+
+let authenticate_dialog request = 
+  (* None of these are a secret, but it sure feels weird to have to pass them back like this *)
+  let passkey_id = match (Dream.query request "id") with
+  | Some id -> id 
+  | _ -> failwith "Invalid Passkey Selected" in
+  let client_id = Database.get_env_value "BI_APP_CLIENT_ID" in
+  let app_id = Database.get_env_value "BI_APP_ID" in 
+  let tenant_id = Database.get_env_value "BI_TENANT_ID" in
+  let realm_id = Database.get_env_value "BI_REALM_ID" in
+  let redirect_uri = Database.get_env_value "BI_AUTH_REDIRECT" in
+    div ~a:[
+      a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
+    ] [
       div ~a:[a_class ["p-4" ; "text-whnvr-950 dark:text-whnvr-100"]] [
-        p ~a:[a_class ["mb-2"]] [
-          txt ("Created user '" ^ new_name ^ "'!") ;
-        ] ;
-        p ~a:[a_class ["underline"]] [
-          txt "Note the below passphrase, you will not have access to it again." ;
-        ] ;
-        p ~a:[a_class ["mt-2"]] [
-          txt "This user will self-destruct in 5 minutes if it does not login." ;
-        ] ;
-        p ~a:[a_class ["text-center" ; "p-4" ; "bg-whnvr-300 dark:bg-whnvr-800"]] [
-          txt new_secret ;
-        ]
+        div ~a:[a_class ["rounded-full border-2 border-solid border-whnvr-400 border-t-transparent animate-spin h-[50px] w-[50px]"]] [] ;
+        (* This is silly. I need a different (read: better) way to pass these around *)
+        input ~a:[
+          a_input_type `Hidden ;
+          a_name "tenant_id" ;
+          a_id "tenant_id" ;
+          a_value tenant_id ;
+        ] () ;
+        input ~a:[
+          a_input_type `Hidden ;
+          a_name "realm_id" ;
+          a_id "realm_id" ;
+          a_value realm_id ;
+        ] () ;
+        input ~a:[
+          a_input_type `Hidden ;
+          a_name "app_id" ;
+          a_id "app_id" ;
+          a_value app_id ;
+        ] () ;
+        input ~a:[
+          a_input_type `Hidden ;
+          a_name "client_id" ;
+          a_id "client_id" ;
+          a_value client_id ;
+        ] () ;
+        input ~a:[
+          a_input_type `Hidden ;
+          a_name "redirect_uri" ;
+          a_id "redirect_uri" ;
+          a_value (Dream.to_percent_encoded redirect_uri) ;
+        ] () ;
+        input ~a:[
+          a_input_type `Hidden ;
+          a_name "passkey_id" ;
+          a_id "passkey_id" ;
+          a_value passkey_id ;
+        ] () ;
+        input ~a:[
+          a_input_type `Hidden ;
+          a_name "state" ;
+          a_id "state" ;
+          a_value (Dream.csrf_token request) ;
+        ] () ;
       ] ;
-      div ~a:[a_class ["p-4"]] [
-        a ~a:[a_href "/login"] [
-          input ~a:[ a_input_type `Button ; a_class button_styles ; a_value "Continue"] () ;
-        ]
-      ] ;
+      script ~a:[a_src (Xml.uri_of_string "/static/authenticate_passkey.dist.js")] (txt "") ;
     ]
 
 let hello_content =
@@ -321,9 +480,18 @@ let hello_content =
     h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "Where am I?" ] ;
     div ~a:[a_class ["p-4"]] [
       p [
-        txt "You're not in a dream, though we do use the Dream web framework in OCaml to build this page. " ;
-        txt "WHNVR is a place to exchange messages that everyone can read. " ;
-        txt "However, messages in WHNVR are not like in other messaging apps. This is not a \"town hall\" where ideas grow and flourish, but a void where they go to die. " ;
+        txt "Imagine a world where the number of followers someone has " ; i [txt "doesn't matter."] ;
+      ] ;
+      p [
+        txt "A world where each person is forced to determine what is true " ; i [txt "for themselves."] ;
+      ] ;
+    ] ;
+    div ~a:[a_class ["p-4"]] [
+      p [
+        txt "Like it or not, this is the real world we live in today. For too long we've entrusted our opinions to people with a number and a letter (e.g. 1.2M)." ;
+      ] ;
+      p [
+        txt "WHNVR is a new place to exchange messages that everyone can read. However, WHNVR is not a \"town hall\" where ideas grow and flourish, but a void where they go to die." ;
       ] ;
     ] ;
     div ~a:[a_class ["p-4"]] [
@@ -335,23 +503,54 @@ let hello_content =
     div ~a:[a_class ["p-4"]] [
       p [
         txt "The messages here only live for 24 hours from the time they are sent. Users live as long as they are in use, " ;
-        txt "so if you are inactive for more than 30 days (24 hour periods), your user is destroyed." ;
+        txt "so if you are inactive for more than 30 days (24 hour periods), your user is destroyed. " ;
+      ] ;
+      p [
+        txt "There are no followers. There are no likes. There is only you, the void, and countless other voices screaming together." ;
       ] ;
     ] ;
     div ~a:[a_class ["p-4"]] [
       p [
-        txt "Security is handled a little differently as well. When you log in, you will be given a passphrase which is the key to your username. " ;
-        txt "Passwords cannot be changed. The passphrase you are given is about as secure as you can get for the time being." ;
-        txt "The next key step for this project is to migrate to Universal Passkeys provided by Beyond Identity, so passwords will die as well." ;
+        txt "Security is handled a little differently as well. WHNVR exclusively uses passkeys for authentication because we believe that passwords also need to die. " ;
+        txt "Because passkeys have not been heavily adopted by other applications yet, there are likely some things that will not immediately make sense. " ;
+        txt "For instance, WHNVR uses passkeys provided by Beyond Identity, which means that they cannot leave the device they are bound to. If you want to log into your " ;
+        txt "account on another device, you will need to \"extend\" your account to a new device by means of an emailed binding flow, which is coming in the next few weeks. " ;
       ] ;
     ] ;
     div ~a:[a_class ["p-4"]] [
-      p [
-        txt "For now, simply type in the username you want, and see if it's available. Once you're in, you can begin to scream into the void like everyone else." ;
+      p ~a:[a_class ["p-4"]] [
+        txt "Welcome to the pursuit of truth" ;
+      ] ;
+      p ~a:[a_class ["p-4"]] [
+        txt "Welcome to the void" ;
+      ] ;
+      p ~a:[a_class ["p-4"]] [
+        txt "Welcome to WHNVR" ;
       ] ;
     ] ;
     div ~a:[a_class ["p-4" ; "text-center"]] [
-      a ~a:[a_href (Xml.uri_of_string "/login") ; a_class ["underline"]] [txt "Return to login"] ;
+      a ~a:[a_href (Xml.uri_of_string "/login") ; a_class ["underline hover:no-underline"]] [txt "Return to login"] ;
+    ]
+  ]
+
+let missing_content = 
+  div ~a:[a_class ["w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8"]] [
+    h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "Where is my passkey?" ] ;
+    div ~a:[a_class ["p-4"]] [
+      p [
+        txt "Passkeys are more like regular keys than passwords. To be cler, this is more secure but it's also a new way of thinking. " ;
+        txt "WHNVR employs passkeys from Beyond Identity, which cannot be moved from one device to another. " ;
+        txt "This means that in order to log in to your account on this device, you will need to request a new passkey enrollment link from a device that already has a passkey." ;
+      ] ;
+    ] ;
+    div ~a:[a_class ["p-4"]] [
+      p [
+        txt "In the future, we plan to implement a way for you to request a passkey binding link from the login page. " ;
+        txt "For now though, you will need to use another device that has a passkey for your account." ;
+      ] ;
+    ] ;
+    div ~a:[a_class ["p-4" ; "text-center"]] [
+      a ~a:[a_href (Xml.uri_of_string "/login") ; a_class ["underline hover:no-underline"]] [txt "Return to login"] ;
     ]
   ]
 
@@ -365,14 +564,18 @@ let hello_content =
 (* @param {[< html_types.flow5 ] elt} content - The content for the page, layout pre-applied *)
 (*********************************************************************************************)
 let html_wrapper page_title content =
-  html 
+  html ~a:[a_class ["min-h-full"]]
     (head (title (txt page_title)) [
       link ~rel:[`Stylesheet] ~href:"/static/build.css" () ;
       script ~a:[a_src (Xml.uri_of_string "/static/htmx.min.js")] (txt "") ;
       script ~a:[a_src (Xml.uri_of_string "/static/_hyperscript.min.js")] (txt "") ;
       script ~a:[a_src (Xml.uri_of_string "/static/helpers.js")] (txt "") ;
     ])
-    (body ~a:[a_class ["bg-whnvr-200 dark:bg-whnvr-950" ; "text-whnvr-900 dark:text-whnvr-100"]] [content])
+    (body ~a:[a_class [
+      "min-h-full" ;
+      "bg-gradient-to-bl from-white to-whnvr-300 dark:from-whnvr-900 dark:to-black" ;
+      "text-neutral-900 dark:text-neutral-100" ;
+    ]] [content])
 
       (*script ~a:[a_src (Xml.uri_of_string "https://cdn.tailwindcss.com")] (txt "") ;*)
       (* This does not seem to work right now, I need to figure out how to build classes correctly *)
@@ -391,7 +594,7 @@ let content_template header content =
     div ~a:[a_class ["flex justify-center items-center" ; "h-32"]] [header] ;
     div ~a:[a_class ["flex flex-row grow"]] [
       div ~a:[a_class ["sm:w-[10%]"]] [] ;
-      div ~a:[a_class ["grow" ; "rounded border border-solid border-whnvr-800 dark:border-whnvr-300"]] [content] ;
+      div ~a:[a_class ["grow" ; "rounded border border-solid border-whnvr-300 dark:border-whnvr-800" ; "bg-whnvr-200 dark:bg-whnvr-900" ; "drop-shadow-md"]] [content] ;
       div ~a:[a_class ["sm:w-[10%]"]] [] ;
     ]
   ]
@@ -407,9 +610,9 @@ let content_template header content =
 let centered_template content =
   div ~a:[a_class ["absolute" ; "flex flex-col justify-center items-center" ; "h-full w-full"]] [
     div ~a:[a_class [
-      "bg-whnvr-300 dark:bg-whnvr-900" ;
-      "rounded border border-solid border-whnvr-800 dark:border-whnvr-300" ;
-      "h-[300px] w-[600px]" ;
+      "bg-whnvr-100 dark:bg-whnvr-900" ; "drop-shadow-md" ;
+      "rounded border border-solid border-whnvr-300 dark:border-whnvr-800" ;
+      "w-[600px]" ;
     ]] [content] ;
   ]
 
@@ -435,12 +638,12 @@ let standard_template main_content right_panel_content =
   div ~a:[a_class ["dark:bg-whnvr-800" ; "flex" ; "flex-row" ; "h-screen" ; "overflow-hidden"]] [
     div ~a:[a_class ["p-4" ; "grow" ; "overflow-auto"]] [main_content] ;
     div ~a:[a_class [
-      "bg-whnvr-400 dark:bg-whnvr-900" ;
+      "bg-whnvr-400 dark:bg-whnvr-950" ;
       "w-[400px]" ;
       "h-screen" ;
       "shadow-[-5px_0px_5px_rgba(0,0,0,0.2)]" ;
       "border-l" ;
-      "border-whnvr-200 dark:border-whnvr-950"
+      "border-whnvr-200 dark:border-black/50"
     ]] [right_panel_content] ;
   ]
 
@@ -459,7 +662,7 @@ let right_column username =
         "w-[300px] h-[300px]" ;
         "mt-4 mb-4" ;
         "rounded-full" ;
-        "bg-whnvr-200 dark:bg-whnvr-950" ;
+        "bg-whnvr-200 dark:bg-whnvr-900" ;
         "flex flex-row justify-center items-center" ;
         "text-4xl" ;
       ]] [
@@ -471,137 +674,3 @@ let right_column username =
     ]  
   ]
 
-(*
-Not sure why I want all these yet... But I do.
-Allowable htmx properties:
-[
-    "hx-boost",
-    "hx-get",
-    "hx-post",
-    "hx-on",
-    "hx-push-url",
-    "hx-select",
-    "hx-select-oob",
-    "hx-swap",
-    "hx-swap-oob",
-    "hx-target",
-    "hx-trigger",
-    "hx-vals",
-    "hx-confirm",
-    "hx-delete",
-    "hx-disable",
-    "hx-disinherit",
-    "hx-encoding",
-    "hx-ext",
-    "hx-headers",
-    "hx-history",
-    "hx-history-elt",
-    "hx-include",
-    "hx-indicator",
-    "hx-params",
-    "hx-patch",
-    "hx-preserve",
-    "hx-prompt",
-    "hx-put",
-    "hx-replace-url",
-    "hx-request",
-    "hx-sse",
-    "hx-sync",
-    "hx-validate",
-    "hx-vars",
-    "hx-ws",
-
-
-
-    "htmx-request",
-    "htmx-added",
-    "htmx-indicator",
-    "htmx-settling",
-    "htmx-swapping",
-    "HX-Boosted",
-    "HX-Current-URL",
-    "HX-History-Restore-Request",
-    "HX-Prompt",
-    "HX-Request",
-    "HX-Target",
-    "HX-Trigger-Name",
-    "HX-Trigger",
-    "HX-Location",
-    "HX-Push-Url",
-    "HX-Redirect",
-    "HX-Refresh",
-    "HX-Replace-Url",
-    "HX-Reswap",
-    "HX-Retarget",
-    "HX-Trigger-After-Settle",
-    "HX-Trigger-After-Swap",
-    "htmx:abort",
-    "htmx:afterOnLoad",
-    "htmx:afterProcessNode",
-    "htmx:afterRequest",
-    "htmx:afterSettle",
-    "htmx:afterSwap",
-    "htmx:beforeOnLoad",
-    "htmx:beforeProcessNode",
-    "htmx:beforeRequest",
-    "htmx:beforeSwap",
-    "htmx:beforeSend",
-    "htmx:configRequest",
-    "htmx:confirm",
-    "htmx:historyCacheError",
-    "htmx:historyCacheMiss",
-    "htmx:historyCacheMissError",
-    "htmx:historyCacheMissLoad",
-    "htmx:historyRestore",
-    "htmx:beforeHistorySave",
-    "htmx:load",
-    "htmx:noSSESourceError",
-    "htmx:onLoadError",
-    "htmx:oobAfterSwap",
-    "htmx:oobBeforeSwap",
-    "htmx:oobErrorNoTarget",
-    "htmx:prompt",
-    "htmx:pushedIntoHistory",
-    "htmx:responseError",
-    "htmx:sendError",
-    "htmx:sseError",
-    "htmx:sseOpen",
-    "htmx:swapError",
-    "htmx:targetError",
-    "htmx:timeout",
-    "htmx:validation:validate",
-    "htmx:validation:failed",
-    "htmx:validation:halted",
-    "htmx:xhr:abort",
-    "htmx:xhr:loadend",
-    "htmx:xhr:loadstart",
-    "htmx:xhr:progress",
-
-
-
-    "htmx.addClass()",
-    "htmx.ajax()",
-    "htmx.closest()",
-    "htmx.config",
-    "htmx.createEventSource",
-    "htmx.createWebSocket",
-    "htmx.defineExtension()",
-    "htmx.find()",
-    "htmx.findAll()",
-    "htmx.findAll(elt, selector)",
-    "htmx.logAll()",
-    "htmx.logger",
-    "htmx.off()",
-    "htmx.on()",
-    "htmx.onLoad()",
-    "htmx.parseInterval()",
-    "htmx.process()",
-    "htmx.remove()",
-    "htmx.removeClass()",
-    "htmx.removeExtension()",
-    "htmx.takeClass()",
-    "htmx.toggleClass()",
-    "htmx.trigger()",
-    "htmx.values()"
-]
-*)

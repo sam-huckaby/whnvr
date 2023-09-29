@@ -61,6 +61,13 @@ let hello_page _ =
       (Builder.content_template (h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"]) Builder.hello_content)
   ) |> Lwt.return
 
+let missing_page _ =
+  Builder.compile_html (
+    Builder.html_wrapper 
+      "How do I get my passkey on this device?"
+      (Builder.content_template (h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"]) Builder.missing_content)
+  ) |> Lwt.return
+
 (* The login page is where the user enters their username and either logs in or registers *)
 let login_page request =
   Builder.compile_html (
@@ -82,9 +89,10 @@ let feed_page request =
 
 (* The page types that are available, so that a non-existant page cannot be specified *)
 type page =
+  | Feed
   | Hello
   | Login
-  | Feed
+  | Missing
 
 (* the main handler that lets the router ask for pages *)
 let generate_page page request =
@@ -92,4 +100,5 @@ let generate_page page request =
   | Hello -> hello_page request
   | Login -> login_page request
   | Feed -> feed_page request
+  | Missing -> missing_page request
 

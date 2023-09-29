@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@beyondidentity/bi-sdk-js": "^2.0.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.19.3"
+  }
+}

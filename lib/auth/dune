@@ -1,0 +1,6 @@
+(library
+  (name auth)
+  (public_name whnvr.auth)
+  (libraries lwt caqti-lwt dream database cohttp cohttp-lwt-unix)
+  (preprocess (pps lwt_ppx))
+ )
