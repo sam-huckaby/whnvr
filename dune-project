@@ -30,6 +30,9 @@
    (caqti-lwt (>= 1.8.0))
    (caqti-driver-postgresql (>= 1.8.0))
    (cryptokit (>= 1.18))
+   mirage-crypto
+   (cohttp-lwt-unix (>= 5.3.0))
+   (dotenv (>= 0.0.3))
    )
  )
 

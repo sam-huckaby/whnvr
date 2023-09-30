@@ -5,14 +5,15 @@ FROM ocaml/opam:ubuntu-22.04-ocaml-5.0 AS init-opam
 RUN set -x && \
     : "Update and upgrade default package" && \
     sudo apt update && sudo apt -y upgrade && \
-    sudo apt -y install postgresql libev-dev libgmp-dev pkg-config libssl-dev zlib1g-dev libpq-dev
+    #sudo apt install ca-certificates && sudo update-ca-certificates -f && \
+    sudo apt -y install postgresql libev-dev libgmp-dev pkg-config libssl-dev zlib1g-dev libpq-dev libpcre3-dev openssl
 
 # --- #
 
 FROM init-opam AS ocaml-app-base
 COPY . .
 RUN set -x && \
-    : "Install related pacakges" && \
+    : "Install related packages" && \
     opam install . --deps-only --locked && \
     eval $(opam env) && \
     : "Build applications" && \
@@ -30,7 +31,7 @@ COPY --from=ocaml-app-base /usr/bin/www /home/app/www
 RUN set -x && \
     : "Update and upgrade default package" && \
     DEBIAN_FRONTEND=noninteractive apt update && DEBIAN_FRONTEND=noninteractive apt -y upgrade && \
-    DEBIAN_FRONTEND=noninteractive apt -y install postgresql libev-dev libgmp-dev pkg-config libssl-dev zlib1g-dev libpq-dev && \
+    DEBIAN_FRONTEND=noninteractive apt -y install ca-certificates postgresql libev-dev libgmp-dev pkg-config libssl-dev zlib1g-dev libpq-dev libpcre3-dev openssl && \
     : "Create a user to execute application" && \
     useradd -ms /bin/bash app && \
     : "Change owner to app" && \
