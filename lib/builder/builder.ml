@@ -78,7 +78,8 @@ let transform_posts posts =
             "text-whnvr-900 dark:text-whnvr-100" ;
             "rounded-lg" ;
             "overflow-hidden" ;
-            "shadow-md"
+            "shadow-md" ;
+            "mb-8 lg:mb-0" ;
           ] ;
           a_id (Int64.to_string post.id)
         ] [
@@ -103,7 +104,8 @@ let construct_post (post: Database.HydratedPost.t) =
             "text-whnvr-100" ;
             "rounded-lg" ;
             "overflow-hidden" ;
-            "shadow-md"
+            "shadow-md" ;
+            "mb-8 lg:mb-0" ;
           ] ;
           a_id ("post_" ^ (Int64.to_string post.id))
         ] [
@@ -127,7 +129,8 @@ let infinite_post (post: Database.HydratedPost.t) after =
       "text-whnvr-100" ;
       "rounded-lg" ;
       "overflow-hidden" ;
-      "shadow-md"
+      "shadow-md" ;
+      "mb-8 lg:mb-0" ;
     ] ;
     a_id ("post_" ^ (Int64.to_string post.id)) ;
     a_hx_typed Get ["/posts?after=" ^ (Int64.to_string after)] ;
@@ -670,7 +673,6 @@ let standard_menu request visible =
   let display_class = match visible with
                       | true -> "block"
                       | false -> "hidden lg:block" in
-  let () = Dream.log "%s" display_class in
   div ~a: [
     a_class [
       display_class ;
@@ -686,7 +688,7 @@ let standard_menu request visible =
         "absolute lg:relative top-0 lg:top-auto right-0 lg:right-auto" ;
         "bg-whnvr-400 dark:bg-whnvr-950" ;
         "w-[60%] lg:w-[400px]" ;
-        "h-screen" ;
+        "h-full" ;
         "shadow-[-5px_0px_5px_rgba(0,0,0,0.2)]" ;
         "border-l" ;
         "border-whnvr-200 dark:border-black/50"
@@ -700,8 +702,8 @@ let standard_menu request visible =
   ]
 
 let standard_template request main_content =
-  div ~a:[a_class ["dark:bg-whnvr-800" ; "flex" ; "flex-row" ; "h-screen" ; "overflow-hidden"]] [
-    div ~a:[a_class ["p-4" ; "grow" ; "overflow-auto"]] [main_content] ;
+  div ~a:[a_class ["dark:bg-whnvr-800" ; "flex" ; "flex-row" ; "absolute top-0 right-0 bottom-0 left-0" ; "overflow-hidden"]] [
+    div ~a:[a_class ["p-4" ; "grow" ; "overflow-auto" ; "pb-[225px] lg:pb-0"]] [main_content] ;
     button ~a:[
       a_class ["absolute z-100 bottom-16 right-16 rounded-full bg-whnvr-300 dark:bg-whnvr-900 shadow-lg border border-whnvr-900 dark:border-0 h-[150px] w-[150px] text-4xl"] ;
       a_hx_typed Target ["#feed_side_menu"] ;
