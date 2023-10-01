@@ -58,14 +58,14 @@ let hello_page _ =
   Builder.compile_html (
     Builder.html_wrapper 
       "What is WHNVR?"
-      (Builder.content_template (h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"]) Builder.hello_content)
+      (Builder.content_template (h1 ~a:[a_class ["text-8xl lg:text-4xl text-black dark:text-white"]] [txt "WHNVR"]) Builder.hello_content)
   ) |> Lwt.return
 
 let missing_page _ =
   Builder.compile_html (
     Builder.html_wrapper 
       "How do I get my passkey on this device?"
-      (Builder.content_template (h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"]) Builder.missing_content)
+      (Builder.content_template (h1 ~a:[a_class ["text-8xl lg:text-4xl text-black dark:text-white"]] [txt "WHNVR"]) Builder.missing_content)
   ) |> Lwt.return
 
 (* The login page is where the user enters their username and either logs in or registers *)

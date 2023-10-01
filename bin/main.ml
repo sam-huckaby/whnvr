@@ -74,30 +74,6 @@ let no_auth_routes = [
     Dream.html (Builder.compile_elt (Builder.password_destroyer request))
   ) ;
 
-  (** Handle a login attempt by either creating an account or requesting a password *)
-  (* TODO: Remove this after repurposing contents into passkey conversion endpoint *)
-  (*
-  Dream.post "/engage" (fun request ->
-    match%lwt Dream.form request with
-    | `Ok form ->
-      begin
-        let (_, username) = Utils.find_list_item form "username" in
-        let%lwt user = Dream.sql request (Database.find_user username) in
-        match user with
-        | Some (found, _) -> Dream.html (Builder.compile_elt (Builder.access_dialog request found))
-        | None -> begin
-            (* this value will need to salted before storing in the DB - Why are passwords still a thing!? *)
-            let secret = Utils.ugly_password_generator () in
-            let%lwt creation = Dream.sql request (Database.create_user username username secret) in
-            match creation with
-            | Ok (_) -> Dream.html (Builder.compile_elt (Builder.enroll_dialog username secret))
-            | Error err -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return
-          end
-      end
-    | _ -> Dream.response (Builder.error_page "Bad payload from the login form") |> Lwt.return
-  ) ;
-  *)
-
   Dream.post "/passkey-upgrade" (fun request ->
     match%lwt Dream.form request with
     | `Ok form ->
@@ -149,7 +125,7 @@ let no_auth_routes = [
     let%lwt (access_token, id_token) = Auth.exchange_token request in
     (* Shoutout to: https://www.shawntabrizi.com/aad/decoding-jwt-tokens/ *)
     let jwt_package = match (String.split_on_char '.' id_token) with
-    (* We do this, because the id_token has headers, a package, and a signature, and we only realy care about the package (for now) *)
+    (* We do this, because the id_token has headers, a package, and a signature, and we only really care about the package (for now) *)
     | [_ ; value ; _] -> value
     | _ -> "" in
 
