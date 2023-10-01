@@ -73,7 +73,7 @@ let transform_posts posts =
         div ~a:[
           a_class [
             "flex flex-col" ;
-            "w-full max-w-[700px]" ;
+            "w-full lg:max-w-[700px]" ;
             "bg-whnvr-300 dark:bg-whnvr-600" ;
             "text-whnvr-900 dark:text-whnvr-100" ;
             "rounded-lg" ;
@@ -83,13 +83,13 @@ let transform_posts posts =
           a_id (Int64.to_string post.id)
         ] [
           div ~a:[a_class ["p-4"]] [
-            p ~a:[a_class ["text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
+            p ~a:[a_class ["text-4xl lg:text-base text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
           ] ;
           div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-500 dark:bg-whnvr-900"]] [
-            span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
+            span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xl lg:text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
             (* I don't want to handle display names yet, though it is implemented in the DB *)
             (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
-            p ~a:[a_class ["text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
+            p ~a:[a_class ["text-2xl lg:text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
           ] ;
         ]
     )
@@ -98,7 +98,7 @@ let construct_post (post: Database.HydratedPost.t) =
         div ~a:[
           a_class [
             "flex flex-col" ;
-            "w-full max-w-[700px]" ;
+            "w-full lg:max-w-[700px]" ;
             "bg-whnvr-300 dark:bg-whnvr-600" ;
             "text-whnvr-100" ;
             "rounded-lg" ;
@@ -108,13 +108,13 @@ let construct_post (post: Database.HydratedPost.t) =
           a_id ("post_" ^ (Int64.to_string post.id))
         ] [
           div ~a:[a_class ["p-4"]] [
-            p ~a:[a_class ["text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
+            p ~a:[a_class ["text-4xl lg:text-base text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
           ] ;
           div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-500 dark:bg-whnvr-900"]] [
-            span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
+            span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xl lg:text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
             (* I don't want to handle display names yet, though it is implemented in the DB *)
             (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
-            p ~a:[a_class ["text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
+            p ~a:[a_class ["text-2xl lg:text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
           ] ;
         ]
 
@@ -122,7 +122,7 @@ let infinite_post (post: Database.HydratedPost.t) after =
   div ~a:[
     a_class [
       "flex flex-col" ;
-      "w-full max-w-[700px]" ;
+      "w-full lg:max-w-[700px]" ;
       "bg-whnvr-300 dark:bg-whnvr-600" ;
       "text-whnvr-100" ;
       "rounded-lg" ;
@@ -136,13 +136,13 @@ let infinite_post (post: Database.HydratedPost.t) after =
     a_hx_typed Trigger ["intersect once"] ;
   ] [
     div ~a:[a_class ["p-4"]] [
-      p ~a:[a_class ["text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
+      p ~a:[a_class ["text-4xl lg:text-base text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
     ] ;
     div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-500 dark:bg-whnvr-900"]] [
-      span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
+      span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xl lg:text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
       (* I don't want to handle display names yet, though it is implemented in the DB *)
       (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
-      p ~a:[a_class ["text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
+      p ~a:[a_class ["text-2xl lg:text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
     ] ;
   ]
 
@@ -703,7 +703,7 @@ let standard_template request main_content =
   div ~a:[a_class ["dark:bg-whnvr-800" ; "flex" ; "flex-row" ; "h-screen" ; "overflow-hidden"]] [
     div ~a:[a_class ["p-4" ; "grow" ; "overflow-auto"]] [main_content] ;
     button ~a:[
-      a_class ["absolute z-100 bottom-16 right-16 rounded-full bg-whnvr-900 h-[150px] w-[150px] text-4xl"] ;
+      a_class ["absolute z-100 bottom-16 right-16 rounded-full bg-whnvr-300 dark:bg-whnvr-900 shadow-lg border border-whnvr-900 dark:border-0 h-[150px] w-[150px] text-4xl"] ;
       a_hx_typed Target ["#feed_side_menu"] ;
       a_hx_typed Swap ["outerHTML"] ;
       a_hx_typed Get ["/menu-open"] ;

@@ -2745,6 +2745,11 @@ select {
   border-color: rgb(51 70 87 / var(--tw-border-opacity));
 }
 
+.border-whnvr-900 {
+  --tw-border-opacity: 1;
+  border-color: rgb(39 51 63 / var(--tw-border-opacity));
+}
+
 .border-b-whnvr-900 {
   --tw-border-opacity: 1;
   border-bottom-color: rgb(39 51 63 / var(--tw-border-opacity));
@@ -3429,6 +3434,12 @@ select {
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
+.shadow-lg {
+  --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
 .outline-none {
   outline: 2px solid transparent;
   outline-offset: 2px;
@@ -3621,6 +3632,10 @@ $bgr-color: #333;
 }
 
 @media (prefers-color-scheme: dark) {
+  .dark\:border-0 {
+    border-width: 0px;
+  }
+
   .dark\:border-black\/50 {
     border-color: rgb(0 0 0 / 0.5);
   }
@@ -3912,6 +3927,16 @@ $bgr-color: #333;
   .lg\:text-xl {
     font-size: 1.25rem;
     line-height: 1.75rem;
+  }
+
+  .lg\:text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  .lg\:text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
   }
 
   .lg\:placeholder\:text-base::-moz-placeholder {
