@@ -2,7 +2,7 @@ open Tyxml.Html
 
 let feed_page_template request =
   div ~a:[a_class ["flex flex-col" ; "w-full" ; "items-center"]] [
-    div ~a:[a_class ["py-4" ; "w-full" ; "max-w-[700px]"]] [
+    div ~a:[a_class ["py-4 px-4 lg:px-0" ; "w-full" ; "lg:max-w-[700px]"]] [
       form ~a:[
           Builder.a_hx_typed Post [Xml.uri_of_string "/posts"] ;
           Builder.a_hx_typed Target ["#posts_container"] ;
@@ -12,7 +12,8 @@ let feed_page_template request =
         (Dream.csrf_tag request) |> Unsafe.data ;
         textarea ~a:[
           a_class [
-            "w-full h-[100px]" ;
+            "w-full h-[250px] lg:h-[100px]" ;
+            "text-4xl lg:text-base" ;
             "bg-whnvr-300 dark:bg-whnvr-700" ;
             "border-whnvr-600 dark:border-whnvr-400" ;
             "p-2" ;
@@ -23,7 +24,7 @@ let feed_page_template request =
           a_maxlength 420 ;
         ] (txt "") ;
         input ~a:[
-          a_class (Builder.button_styles @ ["w-full" ; "hover:bg-whnvr-300" ; "disabled:hover:bg-whnvr-800 disabled:hover:cursor-not-allowed"]) ;
+          a_class (Builder.button_styles @ ["w-full" ; "mt-4 lg:mt-0" ; "py-8 lg:py-2" ; "hover:bg-whnvr-300" ; "disabled:hover:bg-whnvr-800 disabled:hover:cursor-not-allowed"]) ;
           a_input_type `Submit ;
           a_disabled () ;
           Builder.a_hx_typed Builder.Hx_ [
@@ -41,7 +42,7 @@ let feed_page_template request =
     ] ;
     div ~a:[
       a_id "feed_container" ;
-      a_class ["py-4" ; "w-full" ; "max-w-[700px]"] ;
+      a_class ["py-4 px-4 lg:px-0" ; "w-full" ; "lg:max-w-[700px]"] ;
     ] [
       div ~a:[
         a_class ["flex flex-col items-center gap-4"] ;
@@ -78,14 +79,11 @@ let login_page request =
 
 (* The feed page is where the social messages will appear in this test of infinite loading *)
 let feed_page request =
-        match (Dream.session_field request "username") with
-        | Some username ->
-            Builder.compile_html (
-            Builder.html_wrapper
-              "WHNVR - Echos from the void"
-              (Builder.standard_template (feed_page_template request) (Builder.right_column username))
-          ) |> Lwt.return
-        | None -> Builder.error_page "No Username Found" |> Lwt.return
+  Builder.compile_html (
+    Builder.html_wrapper
+      "WHNVR - Echos from the void"
+      (Builder.standard_template request (feed_page_template request))
+  ) |> Lwt.return
 
 (* The page types that are available, so that a non-existant page cannot be specified *)
 type page =

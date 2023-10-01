@@ -16,7 +16,7 @@ Embedded.initialize().then(async (embedded) => {
   if ( passkeys.length === 0 ) {
     htmx.remove(htmx.find("#delete_passkey_link"));
     const noPasskeyTile = document.createElement("div");
-    noPasskeyTile.setAttribute("class", "text-4xl lg:text-base w-full p-4 lg:p-2 mb-2 flex flex-col justify-center items-center rounded border border-solid border-whnvr-500");
+    noPasskeyTile.setAttribute("class", "text-4xl lg:text-base w-full p-4 lg:p-2 mb-2 flex flex-col justify-center items-center rounded border-2 lg:border border-solid border-whnvr-500");
     const noPasskeyText = document.createElement("span");
     noPasskeyText.setAttribute("class", "my-2 italic font-bold");
     noPasskeyText.innerText = "No Passkeys Found";
@@ -46,7 +46,7 @@ Embedded.initialize().then(async (embedded) => {
     const passkeyTile = document.createElement("button");
     passkeyTile.setAttribute("id", "passkey-"+passkey.id);
     // TODO: Can I make these shine on hover?
-    passkeyTile.setAttribute("class", "w-full p-2 mb-8 lg:mb-2 flex flex-col justify-center items-center lg:items-start rounded border border-solid border-whnvr-500 ease-in duration-200 hover:dark:bg-whnvr-950/75 hover:bg-whnvr-300/50");
+    passkeyTile.setAttribute("class", "w-full p-2 mb-8 lg:mb-2 flex flex-col justify-center items-center lg:items-start rounded border-2 lg:border border-solid border-whnvr-500 ease-in duration-200 hover:dark:bg-whnvr-950/75 hover:bg-whnvr-300/50");
     passkeyTile.setAttribute("hx-get", `/authenticate?id=${passkey.id}`);
     passkeyTile.setAttribute("hx-trigger", "click");
     passkeyTile.setAttribute("hx-target", "#passkey_container");

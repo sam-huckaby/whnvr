@@ -18,6 +18,14 @@ let fragments = [
     | Ok (posts) -> Dream.html (Builder.compile_elt_list (Builder.list_posts posts))
     | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return
   ) ;
+
+  Dream.get "/menu-close" (fun request ->
+    Dream.html (Builder.compile_elt (Builder.standard_menu request false))
+  ) ;
+
+  Dream.get "/menu-open" (fun request ->
+    Dream.html (Builder.compile_elt (Builder.standard_menu request true))
+  ) ;
 ]
 
 let actions = [

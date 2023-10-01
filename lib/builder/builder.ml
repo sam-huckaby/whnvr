@@ -62,7 +62,7 @@ let a_hx name = Tyxml.Html.Unsafe.space_sep_attrib ("hx-" ^ name)
 
 (** Some standard button styles *)
 let button_styles =
-  ["border rounded border-whnvr-800 dark:border-whnvr-300" ; "text-whnvr-800 dark:text-whnvr-300 text-4xl lg:text-base" ; "ease-in duration-200" ; "hover:bg-whnvr-300 dark:hover:bg-whnvr-950" ; "cursor-pointer" ; "px-4" ; "py-2"]
+  ["border rounded border-whnvr-800 dark:border-whnvr-300" ; "text-whnvr-800 dark:text-whnvr-300 text-4xl lg:text-base" ; "ease-in duration-200" ; "hover:bg-whnvr-300 dark:hover:bg-whnvr-950" ; "cursor-pointer" ; "px-4" ; "py-8 lg:py-2"]
 let input_styles = ["h-[100px] lg:h-auto text-4xl lg:text-base placeholder:text-4xl lg:placeholder:text-base" ; "border rounded border-whnvr-800 dark:border-whnvr-300" ; "outline-0" ; "bg-whnvr-200 dark:bg-whnvr-800 placeholder-neutral-500 dark:placeholder-whnvr-300"]
 let submit =
     Html.[input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Submit"] () ]
@@ -201,7 +201,7 @@ let passkey_list rm =
     div ~a:[a_class [
       "w-full py-2 mt-2 max-full lg:max-w-[400px]" ;
       "flex flex-col items-center justify-start" ;
-      "max-h-[500px] lg:max-h-[350px] overflow-auto" ;
+      "max-h-[500px] lg:max-h-[350px] min-h-[200px] lg:min-h-[75px] overflow-auto" ;
     ] ; a_id "passkey_container" ] [
       div ~a:[
         a_class [
@@ -339,7 +339,7 @@ let login_dialog request =
   ] [
     h1 ~a:[a_class ["text-9xl lg:text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
     p ~a:[a_class ["text-center text-3xl lg:text-base" ; "pt-2"]] [ txt "Who will be screaming into the void today?" ] ;
-    p ~a:[a_class ["text-center text-red-600 font-bold" ; "pt-2"] ; a_id "login_error_msg"] [ txt err ] ;
+    p ~a:[a_class ["text-center text-3xl lg:text-base text-red-600 font-bold" ; "pt-2"] ; a_id "login_error_msg"] [ txt err ] ;
     (* Passkey tiles are loaded into this div *)
     passkey_list false ;
     a ~a:[
@@ -387,17 +387,17 @@ let login_dialog request =
 let enroll_dialog is_new new_name binding_url = 
     (* It's a little confusing for users if they are upgrading from a password and it says it created a new account... *)
     let creation_text = match is_new with
-    | true -> (p ~a:[a_class ["mb-2"]] [ txt ("Created account for '" ^ new_name ^ "'!") ])
-    | false -> (p ~a:[a_class ["mb-2"]] [ txt ("Created passkey for '" ^ new_name ^ "'!") ]) in
+    | true -> (p ~a:[a_class ["mb-2 text-3xl lg:text-base"]] [ txt ("Created account for '" ^ new_name ^ "'!") ])
+    | false -> (p ~a:[a_class ["mb-2 text-3xl lg:text-base"]] [ txt ("Created passkey for '" ^ new_name ^ "'!") ]) in
 
     let self_destruct_text = match is_new with
-    | true -> (p ~a:[a_class ["mt-2"]] [ txt "This user will self-destruct in 5 minutes if it does not login." ])
-    | false -> (p ~a:[a_class ["mt-2"]] [ txt "Please return to login to try it out." ]) in
+    | true -> (p ~a:[a_class ["mt-2 text-3xl lg:text-base"]] [ txt "This user will self-destruct in 5 minutes if it does not login." ])
+    | false -> (p ~a:[a_class ["mt-2 text-3xl lg:text-base"]] [ txt "Please return to login to try it out." ]) in
 
     div ~a:[
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
     ] [
-      h1 ~a:[a_class ["mt-4 text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+      h1 ~a:[a_class ["mt-4 text-9xl lg:text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
       div ~a:[a_class ["p-4" ; "text-center text-whnvr-950 dark:text-whnvr-100"]] [
         creation_text ;
         self_destruct_text ;
@@ -636,19 +636,6 @@ let infinite_template left_content middle_content right_content =
     div ~a:[a_class ["flex" ; "flex-col" ; "grow"]] [right_content] ;
   ]
 
-let standard_template main_content right_panel_content =
-  div ~a:[a_class ["dark:bg-whnvr-800" ; "flex" ; "flex-row" ; "h-screen" ; "overflow-hidden"]] [
-    div ~a:[a_class ["p-4" ; "grow" ; "overflow-auto"]] [main_content] ;
-    div ~a:[a_class [
-      "bg-whnvr-400 dark:bg-whnvr-950" ;
-      "w-[400px]" ;
-      "h-screen" ;
-      "shadow-[-5px_0px_5px_rgba(0,0,0,0.2)]" ;
-      "border-l" ;
-      "border-whnvr-200 dark:border-black/50"
-    ]] [right_panel_content] ;
-  ]
-
 let left_column () =
   div ~a:[a_class ["flex" ; "flex-col" ; "px-8"]] [
     div ~a:[a_class ["flex" ; "flex-row" ]] [
@@ -672,7 +659,57 @@ let right_column username =
       ] ;
     ] ;
     div ~a:[a_class ["pb-4" ; "flex flex-col items-center"]] [
-      input ~a:[ a_input_type `Button ; a_class (button_styles @ ["w-[300px]"]) ; a_hx_typed Post ["/logout"] ; a_value "Logout"] () ;
+      input ~a:[ a_input_type `Button ; a_class (button_styles @ ["w-full lg:w-[300px]"]) ; a_hx_typed Post ["/logout"] ; a_value "Logout"] () ;
     ]  
   ]
+
+let standard_menu request visible =
+  let username = match (Dream.session_field request "username") with
+                 | Some uname -> uname
+                 | None -> "" in
+  let display_class = match visible with
+                      | true -> "block"
+                      | false -> "hidden lg:block" in
+  let () = Dream.log "%s" display_class in
+  div ~a: [
+    a_class [
+      display_class ;
+      "absolute z-200 lg:relative w-full lg:w-auto h-full lg:h-auto bg-whnvr-600/50 lg:bg-transparent"
+    ] ;
+    a_id "feed_side_menu" ;
+    a_hx_typed Target ["this"] ;
+    a_hx_typed Swap ["outerHTML"] ;
+    a_hx_typed Get ["/menu-close"] ;
+  ] [
+    div ~a:[
+      a_class [
+        "absolute lg:relative top-0 lg:top-auto right-0 lg:right-auto" ;
+        "bg-whnvr-400 dark:bg-whnvr-950" ;
+        "w-[60%] lg:w-[400px]" ;
+        "h-screen" ;
+        "shadow-[-5px_0px_5px_rgba(0,0,0,0.2)]" ;
+        "border-l" ;
+        "border-whnvr-200 dark:border-black/50"
+      ] ;
+      a_hx_typed Hx_ [
+        "on click" ;
+          "halt the event" ;
+        "end" ;
+      ]
+    ] [ (right_column username) ] ;
+  ]
+
+let standard_template request main_content =
+  div ~a:[a_class ["dark:bg-whnvr-800" ; "flex" ; "flex-row" ; "h-screen" ; "overflow-hidden"]] [
+    div ~a:[a_class ["p-4" ; "grow" ; "overflow-auto"]] [main_content] ;
+    button ~a:[
+      a_class ["absolute z-100 bottom-16 right-16 rounded-full bg-whnvr-900 h-[150px] w-[150px] text-4xl"] ;
+      a_hx_typed Target ["#feed_side_menu"] ;
+      a_hx_typed Swap ["outerHTML"] ;
+      a_hx_typed Get ["/menu-open"] ;
+    ] [ txt "MENU" ] ;
+    (* Menu visibility always starts false and is toggled into view by the button *)
+    (standard_menu request false) ;
+  ]
+
 

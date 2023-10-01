@@ -11,6 +11,8 @@ let create_identity display_name username email =
   let headers = Header.of_list [("Content-Type", "application/json") ; ("Authorization", "Bearer " ^ api_token)] in
   Client.post ~headers ~body (Uri.of_string ("https://api-us.beyondidentity.com/v1/tenants/" ^ tenant_id ^ "/realms/" ^ realm_id ^ "/identities"))
   >>= fun (resp, body) -> 
+    (* Uncomment below to see what response comes back. When a malformed email is sent, BI returns 400 *)
+    (*let () = Dream.log "%i" (Code.code_of_status (Cohttp.Response.status resp)) in*)
     if Code.is_success (Code.code_of_status (Cohttp.Response.status resp)) then
       body |> Cohttp_lwt.Body.to_string 
       |> Lwt.map (fun res -> Some res)
