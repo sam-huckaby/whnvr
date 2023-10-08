@@ -62,8 +62,8 @@ let a_hx name = Tyxml.Html.Unsafe.space_sep_attrib ("hx-" ^ name)
 
 (** Some standard button styles *)
 let button_styles =
-  ["border rounded border-whnvr-800 dark:border-whnvr-300" ; "text-whnvr-800 dark:text-whnvr-300 text-4xl lg:text-base" ; "ease-in duration-200" ; "hover:bg-whnvr-300 dark:hover:bg-whnvr-950" ; "cursor-pointer" ; "px-4" ; "py-8 lg:py-2"]
-let input_styles = ["h-[100px] lg:h-auto text-4xl lg:text-base placeholder:text-4xl lg:placeholder:text-base" ; "border rounded border-whnvr-800 dark:border-whnvr-300" ; "outline-0" ; "bg-whnvr-200 dark:bg-whnvr-800 placeholder-neutral-500 dark:placeholder-whnvr-300"]
+  ["border rounded border-whnvr-800 dark:border-whnvr-300" ; "text-whnvr-800 dark:text-whnvr-300 text-base" ; "ease-in duration-200" ; "hover:bg-whnvr-300 dark:hover:bg-whnvr-950" ; "cursor-pointer" ; "px-4" ; "py-2"]
+let input_styles = ["h-auto text-base placeholder:text-base" ; "border rounded border-whnvr-800 dark:border-whnvr-300" ; "outline-0" ; "bg-whnvr-200 dark:bg-whnvr-800 placeholder-neutral-500 dark:placeholder-whnvr-300"]
 let submit =
     Html.[input ~a:[ a_input_type `Submit ; a_class button_styles ; a_value "Submit"] () ]
 
@@ -79,18 +79,18 @@ let transform_posts posts =
             "rounded-lg" ;
             "overflow-hidden" ;
             "shadow-md" ;
-            "mb-8 lg:mb-0" ;
+            "mb-0" ;
           ] ;
           a_id (Int64.to_string post.id)
         ] [
           div ~a:[a_class ["p-4"]] [
-            p ~a:[a_class ["text-4xl lg:text-base text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
+            p ~a:[a_class ["text-base text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
           ] ;
           div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-500 dark:bg-whnvr-900"]] [
-            span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xl lg:text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
+            span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
             (* I don't want to handle display names yet, though it is implemented in the DB *)
             (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
-            p ~a:[a_class ["text-2xl lg:text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
+            p ~a:[a_class ["text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
           ] ;
         ]
     )
@@ -105,18 +105,18 @@ let construct_post (post: Database.HydratedPost.t) =
             "rounded-lg" ;
             "overflow-hidden" ;
             "shadow-md" ;
-            "mb-8 lg:mb-0" ;
+            "mb-0" ;
           ] ;
           a_id ("post_" ^ (Int64.to_string post.id))
         ] [
           div ~a:[a_class ["p-4"]] [
-            p ~a:[a_class ["text-4xl lg:text-base text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
+            p ~a:[a_class ["text-base text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
           ] ;
           div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-500 dark:bg-whnvr-900"]] [
-            span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xl lg:text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
+            span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
             (* I don't want to handle display names yet, though it is implemented in the DB *)
             (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
-            p ~a:[a_class ["text-2xl lg:text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
+            p ~a:[a_class ["text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
           ] ;
         ]
 
@@ -130,7 +130,7 @@ let infinite_post (post: Database.HydratedPost.t) after =
       "rounded-lg" ;
       "overflow-hidden" ;
       "shadow-md" ;
-      "mb-8 lg:mb-0" ;
+      "mb-0" ;
     ] ;
     a_id ("post_" ^ (Int64.to_string post.id)) ;
     a_hx_typed Get ["/posts?after=" ^ (Int64.to_string after)] ;
@@ -139,13 +139,13 @@ let infinite_post (post: Database.HydratedPost.t) after =
     a_hx_typed Trigger ["intersect once"] ;
   ] [
     div ~a:[a_class ["p-4"]] [
-      p ~a:[a_class ["text-4xl lg:text-base text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
+      p ~a:[a_class ["text-base text-whnvr-900 dark:text-whnvr-100"]] [txt post.message] ;
     ] ;
     div ~a:[a_class ["flex flex-row items-center justify-between" ; "px-4 py-2" ; "bg-whnvr-500 dark:bg-whnvr-900"]] [
-      span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xl lg:text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
+      span ~a:[a_class ["text-whnvr-100 dark:text-whnvr-300 text-xs uppercase whnvr-time"]] [txt (Ptime.to_rfc3339 post.created)] ;
       (* I don't want to handle display names yet, though it is implemented in the DB *)
       (*h2 ~a:[a_class ["text-lg font-semibold text-whnvr-100"]] [txt post.display_name] ;*)
-      p ~a:[a_class ["text-2xl lg:text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
+      p ~a:[a_class ["text-sm font-medium text-whnvr-100 dark:text-whnvr-300"]] [txt ("@" ^ post.username)]
     ] ;
   ]
 
@@ -203,13 +203,14 @@ let passkey_list rm =
     | false -> script ~a:[a_src (Xml.uri_of_string "/static/load_passkeys.dist.js")] (txt "") in
     div ~a:[a_class [
       "w-full py-2 mt-2 max-full lg:max-w-[400px]" ;
+      "shadow-inner" ;
       "flex flex-col items-center justify-start" ;
       "max-h-[500px] lg:max-h-[350px] min-h-[200px] lg:min-h-[75px] overflow-auto" ;
     ] ; a_id "passkey_container" ] [
       div ~a:[
         a_class [
           "rounded-full border-2 border-whnvr-800 dark:border-whnvr-300 border-t-transparent dark:border-t-transparent border-solid animate-spin" ;
-          "w-[150px] lg:w-[50px] h-[150px] lg:h-[50px]" ;
+          "w-[50px] h-[50px]" ;
         ] ;
         a_id "passkey_loader" ;
       ] [] ;
@@ -223,8 +224,8 @@ let account_form request =
       a_hx_typed ReplaceUrl ["/login"] ;
       a_name "login_form" ;
     ] [
-      h1 ~a:[a_class ["text-9xl lg:text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
-      p ~a:[a_class ["text-center" ; "text-3xl lg:text-base" ; "pt-2"]] [ txt "Join us" ] ;
+      h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+      p ~a:[a_class ["text-center" ; "text-base" ; "pt-2"]] [ txt "Join us" ] ;
       (Dream.csrf_tag request) |> Unsafe.data ;
       div ~a:[a_class ["p-4" ; "flex" ; "flex-col" ; "w-full"] ; a_id "enroll_form"] [
         input ~a:[
@@ -273,9 +274,9 @@ let password_destroyer request =
       a_hx_typed ReplaceUrl ["/login"] ;
       a_name "login_form" ;
     ] [
-      h1 ~a:[a_class ["mt-4 text-9xl lg:text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
-      p ~a:[a_class ["text-center" ; "text-3xl lg:text-base" ; "pt-2"]] [ txt "WHNVR has migrated to using passkeys as a more secure login method." ] ;
-      p ~a:[a_class ["text-center" ; "text-3xl lg:text-base" ; "pt-2"]] [ txt "This form will convert your password to a passkey on this device." ] ;
+      h1 ~a:[a_class ["mt-4 text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+      p ~a:[a_class ["text-center" ; "text-base" ; "pt-2"]] [ txt "WHNVR has migrated to using passkeys as a more secure login method." ] ;
+      p ~a:[a_class ["text-center" ; "text-base" ; "pt-2"]] [ txt "This form will convert your password to a passkey on this device." ] ;
       (Dream.csrf_tag request) |> Unsafe.data ;
       div ~a:[a_class ["p-4" ; "flex" ; "flex-col" ; "w-full"] ; a_id "enroll_form"] [
         input ~a:[
@@ -303,7 +304,7 @@ let password_destroyer request =
           a_name "email" ;
           a_placeholder "email" ;
         ] () ;
-        span ~a:[a_class ["text-whnvr-600 dark:text-whnvr-300" ; "text-3xl lg:text-base"]] [ txt "Needed for account recovery and extension" ]
+        span ~a:[a_class ["text-whnvr-600 dark:text-whnvr-300" ; "text-base"]] [ txt "Needed for account recovery and extension" ]
       ] ;
       div ~a:[a_class ["p-4 flex flex-row justify-around w-full lg:max-w-[400px]"] ; a_id "continue_button"] [
         a ~a:[a_class button_styles ; a_href "/login"] [ txt "Back to login" ] ;
@@ -340,35 +341,35 @@ let login_dialog request =
     ] ;
     a_id "main_login_container"
   ] [
-    h1 ~a:[a_class ["text-9xl lg:text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
-    p ~a:[a_class ["text-center text-3xl lg:text-base" ; "pt-2"]] [ txt "Who will be screaming into the void today?" ] ;
-    p ~a:[a_class ["text-center text-3xl lg:text-base text-red-600 font-bold" ; "pt-2"] ; a_id "login_error_msg"] [ txt err ] ;
+    h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+    p ~a:[a_class ["text-center text-base" ; "pt-2"]] [ txt "Who will be screaming into the void today?" ] ;
+    p ~a:[a_class ["text-center text-base text-red-600 font-bold" ; "pt-2"] ; a_id "login_error_msg"] [ txt err ] ;
     (* Passkey tiles are loaded into this div *)
     passkey_list false ;
     a ~a:[
-      a_class [" my-8 lg:my-4 underline hover:no-underline cursor-pointer text-3xl lg:text-base"] ;
+      a_class ["my-4 underline hover:no-underline cursor-pointer text-base"] ;
       a_id "password_destroyer_link" ;
       a_hx_typed Get ["/upgrade-to-passkey"] ;
       a_hx_typed Target ["#main_login_container"] ;
       a_hx_typed Swap ["outerHTML"] ;
     ] [ txt "I have a password" ] ;
-    div ~a:[a_class ["flex flex-row flex-wrap justify-center items-center"] ; a_id "login_links"] [
-      div ~a:[a_class ["w-1/2 my-8 lg:my-4 flex flex-row justify-center items-center text-3xl lg:text-base"]] [
+    div ~a:[a_class ["w-full flex flex-col lg:flex-row flex-wrap justify-center items-center"] ; a_id "login_links"] [
+      div ~a:[a_class ["w-full lg:w-1/2 my-4 flex flex-row justify-center items-center text-base"]] [
         a ~a:[a_href (Xml.uri_of_string "/hello") ; a_class ["underline hover:no-underline"]] [ txt "What is this place?" ]
       ] ;
-      div ~a:[a_class ["w-1/2 my-8 lg:my-4 flex flex-row justify-center items-center text-3xl lg:text-base"]] [
+      div ~a:[a_class ["w-full lg:w-1/2 my-4 flex flex-row justify-center items-center text-base"]] [
         a ~a:[a_href (Xml.uri_of_string "/missing") ; a_class ["underline hover:no-underline"]] [ txt "I don't see my account" ] ;
       ] ;
-      div ~a:[a_class ["w-1/2 my-8 lg:my-4 flex flex-row justify-center items-center text-3xl lg:text-base"]] [
+      div ~a:[a_class ["w-full lg:w-1/2 my-4 flex flex-row justify-center items-center text-base"]] [
         button ~a:[
           a_class ["underline hover:no-underline"] ;
           a_id "delete_passkey_link" ;
           a_hx_typed Get ["/delete-passkey"] ;
           a_hx_typed Target ["#passkey_container"] ;
-          a_hx_typed Swap ["innerHTML"] ;
+          a_hx_typed Swap ["outerHTML"] ;
         ] [ txt "Delete a passkey" ] ;
       ] ;
-      div ~a:[a_class ["w-1/2 my-8 lg:my-4 flex flex-row justify-center items-center text-3xl lg:text-base"]] [
+      div ~a:[a_class ["w-full lg:w-1/2 my-4 flex flex-row justify-center items-center text-base"]] [
         button ~a:[
           a_class ["underline hover:no-underline"] ;
           a_hx_typed Get ["/create-account"] ;
@@ -378,7 +379,7 @@ let login_dialog request =
       ] ;
     ] ;
     div ~a:[a_class ["flex flex-row flex-wrap justify-center items-center w-full" ; "hidden"] ; a_id "delete_links"] [
-      div ~a:[a_class ["w-1/2 my-4 flex flex-row justify-center items-center text-3xl lg:text-base"]] [
+      div ~a:[a_class ["w-full lg:w-1/2 my-4 flex flex-row justify-center items-center text-base"]] [
         a ~a:[a_href (Xml.uri_of_string "/login") ; a_class ["underline hover:no-underline"]] [ txt "Back to login" ]
       ] ;
     ] ;
@@ -390,17 +391,17 @@ let login_dialog request =
 let enroll_dialog is_new new_name binding_url = 
     (* It's a little confusing for users if they are upgrading from a password and it says it created a new account... *)
     let creation_text = match is_new with
-    | true -> (p ~a:[a_class ["mb-2 text-3xl lg:text-base"]] [ txt ("Created account for '" ^ new_name ^ "'!") ])
-    | false -> (p ~a:[a_class ["mb-2 text-3xl lg:text-base"]] [ txt ("Created passkey for '" ^ new_name ^ "'!") ]) in
+    | true -> (p ~a:[a_class ["mb-2 text-base"]] [ txt ("Created account for '" ^ new_name ^ "'!") ])
+    | false -> (p ~a:[a_class ["mb-2 text-base"]] [ txt ("Created passkey for '" ^ new_name ^ "'!") ]) in
 
     let self_destruct_text = match is_new with
-    | true -> (p ~a:[a_class ["mt-2 text-3xl lg:text-base"]] [ txt "This user will self-destruct in 5 minutes if it does not login." ])
-    | false -> (p ~a:[a_class ["mt-2 text-3xl lg:text-base"]] [ txt "Please return to login to try it out." ]) in
+    | true -> (p ~a:[a_class ["mt-2 text-base"]] [ txt "This user will self-destruct in 5 minutes if it does not login." ])
+    | false -> (p ~a:[a_class ["mt-2 text-base"]] [ txt "Please return to login to try it out." ]) in
 
     div ~a:[
       a_class ["flex" ; "flex-col" ; "justify-center" ; "items-center"] ;
     ] [
-      h1 ~a:[a_class ["mt-4 text-9xl lg:text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+      h1 ~a:[a_class ["mt-4 text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
       div ~a:[a_class ["p-4" ; "text-center text-whnvr-950 dark:text-whnvr-100"]] [
         creation_text ;
         self_destruct_text ;
@@ -411,7 +412,7 @@ let enroll_dialog is_new new_name binding_url =
           a_value binding_url ;
         ] () ;
       ] ;
-      div ~a:[a_class ["mb-4 rounded-full border-2 border-solid border-whnvr-400 border-t-transparent animate-spin w-[150px] lg:w-[50px] h-[150px] lg:h-[50px]"] ; a_id "bind_passkey_loader"] [] ;
+      div ~a:[a_class ["mb-4 rounded-full border-2 border-solid border-whnvr-400 border-t-transparent animate-spin w-[50px] h-[50px]"] ; a_id "bind_passkey_loader"] [] ;
       div ~a:[a_class ["mb-4 p-4 hidden"] ; a_id "bind_passkey_continue"] [
         a ~a:[a_href "/login" ; a_class button_styles] [ txt "Continue" ]
       ] ;
@@ -481,8 +482,8 @@ let authenticate_dialog request =
     ]
 
 let hello_content =
-  div ~a:[a_class ["w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8" ; "text-4xl lg:text-base"]] [
-    h1 ~a:[a_class ["text-6xl lg:text-4xl" ; "p-4"]] [txt "Where am I?" ] ;
+  div ~a:[a_class ["w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8" ; "text-base"]] [
+    h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "Where am I?" ] ;
     div ~a:[a_class ["p-4"]] [
       p [
         txt "Imagine a world where the number of followers someone has " ; i [txt "doesn't matter."] ;
@@ -539,8 +540,8 @@ let hello_content =
   ]
 
 let missing_content = 
-  div ~a:[a_class ["w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8" ; "text-4xl lg:text-base"]] [
-    h1 ~a:[a_class ["text-6xl lg:text-4xl" ; "p-4"]] [txt "Where is my passkey?" ] ;
+  div ~a:[a_class ["w-full" ; "h-full" ; "flex" ; "flex-col" ; "p-8" ; "text-base"]] [
+    h1 ~a:[a_class ["text-4xl" ; "p-4"]] [txt "Where is my passkey?" ] ;
     div ~a:[a_class ["p-4"]] [
       p [
         txt "Passkeys are more like regular keys than passwords. To be cler, this is more secure but it's also a new way of thinking. " ;
@@ -569,8 +570,9 @@ let missing_content =
 (* @param {[< html_types.flow5 ] elt} content - The content for the page, layout pre-applied *)
 (*********************************************************************************************)
 let html_wrapper page_title content =
-  html ~a:[a_class ["min-h-full"]]
+  html ~a:[a_class ["min-h-full"] ; a_lang "en" ]
     (head (title (txt page_title)) [
+      meta ~a:[a_name "viewport" ; a_content "width=device-width, initial-scale=1"] () ;
       link ~rel:[`Stylesheet] ~href:"/static/build.css" () ;
       script ~a:[a_src (Xml.uri_of_string "/static/htmx.min.js")] (txt "") ;
       script ~a:[a_src (Xml.uri_of_string "/static/_hyperscript.min.js")] (txt "") ;
@@ -649,14 +651,14 @@ let left_column () =
 let right_column username =
   div ~a:[a_class ["h-full" ; "flex" ; "flex-col" ; "justify-between" ; "px-8" ]] [
     div ~a:[a_class ["flex" ; "flex-col" ; "items-center" ; "pt-4"]] [
-      h1 ~a:[a_class ["text-6xl" ; "text-black dark:text-white"]] [ txt "WHNVR"] ;
+      h1 ~a:[a_class ["text-5xl" ; "text-black dark:text-white"]] [ txt "WHNVR"] ;
       div ~a:[a_class [
-        "w-[300px] h-[300px]" ;
+        "w-[150px] lg:w-[300px] h-[150px] lg:h-[300px]" ;
         "mt-4 mb-4" ;
         "rounded-full" ;
         "bg-whnvr-200 dark:bg-whnvr-900" ;
         "flex flex-row justify-center items-center" ;
-        "text-4xl" ;
+        "text-2xl lg:text-4xl" ;
       ]] [
         txt username
       ] ;
@@ -703,13 +705,19 @@ let standard_menu request visible =
 
 let standard_template request main_content =
   div ~a:[a_class ["dark:bg-whnvr-800" ; "flex" ; "flex-row" ; "absolute top-0 right-0 bottom-0 left-0" ; "overflow-hidden"]] [
-    div ~a:[a_class ["p-4" ; "grow" ; "overflow-auto" ; "pb-[225px] lg:pb-0"]] [main_content] ;
+    div ~a:[a_class ["p-4" ; "grow" ; "overflow-auto" ; "pb-[100px] lg:pb-0"]] [main_content] ;
     button ~a:[
-      a_class ["absolute z-100 bottom-16 right-16 rounded-full bg-whnvr-300 dark:bg-whnvr-900 shadow-lg border border-whnvr-900 dark:border-0 h-[150px] w-[150px] text-4xl"] ;
+      a_class [
+        "absolute bottom-8 right-8 z-100" ; 
+        "border border-whnvr-900 rounded-full" ;
+        "bg-whnvr-300 dark:bg-whnvr-500 shadow-lg" ;
+        "h-[75px] w-[75px]" ;
+        "text-3xl text-neutral-900" ;
+      ] ;
       a_hx_typed Target ["#feed_side_menu"] ;
       a_hx_typed Swap ["outerHTML"] ;
       a_hx_typed Get ["/menu-open"] ;
-    ] [ txt "MENU" ] ;
+    ] [ txt "☰" ] ;
     (* Menu visibility always starts false and is toggled into view by the button *)
     (standard_menu request false) ;
   ]

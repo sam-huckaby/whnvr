@@ -12,8 +12,7 @@ let feed_page_template request =
         (Dream.csrf_tag request) |> Unsafe.data ;
         textarea ~a:[
           a_class [
-            "w-full h-[250px] lg:h-[100px]" ;
-            "text-4xl lg:text-base" ;
+            "w-full h-[100px]" ;
             "bg-whnvr-300 dark:bg-whnvr-700" ;
             "border-whnvr-600 dark:border-whnvr-400" ;
             "p-2" ;
@@ -24,7 +23,7 @@ let feed_page_template request =
           a_maxlength 420 ;
         ] (txt "") ;
         input ~a:[
-          a_class (Builder.button_styles @ ["w-full" ; "mt-4 lg:mt-0" ; "py-8 lg:py-2" ; "hover:bg-whnvr-300" ; "disabled:hover:bg-whnvr-800 disabled:hover:cursor-not-allowed"]) ;
+          a_class (Builder.button_styles @ ["w-full" ; "mt-4 lg:mt-0" ; "py-2" ; "hover:bg-whnvr-300" ; "disabled:hover:bg-whnvr-800 disabled:hover:cursor-not-allowed"]) ;
           a_input_type `Submit ;
           a_disabled () ;
           Builder.a_hx_typed Builder.Hx_ [
@@ -59,14 +58,14 @@ let hello_page _ =
   Builder.compile_html (
     Builder.html_wrapper 
       "What is WHNVR?"
-      (Builder.content_template (h1 ~a:[a_class ["text-8xl lg:text-4xl text-black dark:text-white"]] [txt "WHNVR"]) Builder.hello_content)
+      (Builder.content_template (h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"]) Builder.hello_content)
   ) |> Lwt.return
 
 let missing_page _ =
   Builder.compile_html (
     Builder.html_wrapper 
       "How do I get my passkey on this device?"
-      (Builder.content_template (h1 ~a:[a_class ["text-8xl lg:text-4xl text-black dark:text-white"]] [txt "WHNVR"]) Builder.missing_content)
+      (Builder.content_template (h1 ~a:[a_class ["text-4xl text-black dark:text-white"]] [txt "WHNVR"]) Builder.missing_content)
   ) |> Lwt.return
 
 (* The login page is where the user enters their username and either logs in or registers *)

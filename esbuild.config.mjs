@@ -10,6 +10,7 @@ let ctx = await esbuild.context({
   outdir: 'www/static',
   outExtension: { '.js': '.dist.js' },
   bundle: true,
+  minify: true,
 });
 
 await ctx.watch();

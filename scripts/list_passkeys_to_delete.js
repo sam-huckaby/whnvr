@@ -14,10 +14,9 @@ Embedded.initialize().then(async (embedded) => {
   // Grab the container that passkeys will live in, so we can fill it
   const container = document.getElementById("passkey_container");
 
-  // If the user has never enrolled a passkey before, we need to provide them with a route to create their first
-  if ( passkeys.length === 2 ) {
+  if ( passkeys.length === 0 ) {
     const noPasskeysMsg = document.createElement("div");
-    noPasskeysMsg.setAttribute("class", "text-4xl lg:text-base w-full p-4 lg:p-2 flex flex-row justify-center items-center rounded border border-solid border-whnvr-500");
+    noPasskeysMsg.setAttribute("class", "text-base w-full p-4 lg:p-2 flex flex-row justify-center items-center rounded border border-solid border-whnvr-500");
     noPasskeysMsg.innerText = "No passkeys to delete";
     container.append(noPasskeysMsg);
     return;
@@ -36,10 +35,10 @@ Embedded.initialize().then(async (embedded) => {
   for( const passkey of passkeys ) {
     // Create the displayable contents for a passkey
     const passkeyDisplayName = document.createElement("span");
-    passkeyDisplayName.setAttribute("class", "text-6xl lg:text-xl");
+    passkeyDisplayName.setAttribute("class", "text-xl");
     passkeyDisplayName.innerText = passkey.identity.displayName;
     const passkeyEmail = document.createElement("span");
-    passkeyEmail.setAttribute("class", "text-3xl lg:text-base text-whnvr-500");
+    passkeyEmail.setAttribute("class", "text-base text-whnvr-500");
     passkeyEmail.innerText = passkey.identity.primaryEmailAddress ?? "No Email Provided";
 
     // Create a container to display a given passkey's items
@@ -53,7 +52,7 @@ Embedded.initialize().then(async (embedded) => {
     passkeyInfo.append(passkeyEmail);
 
     const passkeyDeleter = document.createElement("div");
-    passkeyDeleter.setAttribute("class", "text-4xl lg:text-base flex flex-col justify-center items-center w-[50px] h-[50px]");
+    passkeyDeleter.setAttribute("class", "text-base flex flex-col justify-center items-center w-[50px] h-[50px]");
     passkeyDeleter.innerText = "🗑️";
 
     // Give the tile the info section and the delete icon
