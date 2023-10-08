@@ -1,8 +1,6 @@
-import "@beyondidentity/bi-sdk-js";
-import { Embedded } from "@beyondidentity/bi-sdk-js";
+// Use the pre-initialized Beyond Identity sdk, so we don't keep reloading it
+window.byndid.initialized.then(async (embedded) => {
 
-// We have to initialize the embedded SDK every time we want to use it, so that seems a little weird. Can I pass this around?
-Embedded.initialize().then(async (embedded) => {
   // Get passkeys that are already bound to the current device
   const passkeys = await embedded.getPasskeys();
 

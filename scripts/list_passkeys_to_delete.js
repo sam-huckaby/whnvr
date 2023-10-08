@@ -1,10 +1,7 @@
-import "@beyondidentity/bi-sdk-js";
-import { Embedded } from "@beyondidentity/bi-sdk-js";
-
 htmx.remove(htmx.find("#password_destroyer_link"));
 htmx.remove(htmx.find("#login_error_msg"));
 
-Embedded.initialize().then(async (embedded) => {
+window.byndid.initialized.then(async (embedded) => {
   // Get passkeys that are already bound to the current device
   const passkeys = await embedded.getPasskeys();
 

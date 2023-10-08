@@ -1,7 +1,4 @@
-import "@beyondidentity/bi-sdk-js";
-import { Embedded } from "@beyondidentity/bi-sdk-js";
-
-Embedded.initialize().then(async (embedded) => {
+window.byndid.initialized.then(async (embedded) => {
   // Collect all the hidden treasures that OCaml sent in hidden fields
   const tenant_id = document.getElementById("tenant_id").value;
   const realm_id = document.getElementById("realm_id").value;

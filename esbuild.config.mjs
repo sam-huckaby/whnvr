@@ -6,6 +6,7 @@ let ctx = await esbuild.context({
 	  'scripts/load_passkeys.js',
 	  'scripts/list_passkeys_to_delete.js',
 	  'scripts/authenticate_passkey.js',
+	  'scripts/namespace_bi.js',
   ],
   outdir: 'www/static',
   outExtension: { '.js': '.dist.js' },
