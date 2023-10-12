@@ -2,10 +2,11 @@ import * as esbuild from 'esbuild';
 
 let ctx = await esbuild.context({
   entryPoints: [
-	  'scripts/bind_new_passkey.js',
-	  'scripts/load_passkeys.js',
-	  'scripts/list_passkeys_to_delete.js',
 	  'scripts/authenticate_passkey.js',
+	  'scripts/bind_new_passkey.js',
+	  'scripts/extend_account.js',
+	  'scripts/list_passkeys_to_delete.js',
+	  'scripts/load_passkeys.js',
 	  'scripts/namespace_bi.js',
   ],
   outdir: 'www/static',

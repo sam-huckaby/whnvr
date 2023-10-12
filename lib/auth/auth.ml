@@ -35,6 +35,19 @@ let get_credential_binding_url identity_id =
   (* The resppnse body should be a credential binding link that the embedded SDK can use *)
   body |> Cohttp_lwt.Body.to_string
 
+(** Identity ID comes either from a create_identity response (new user) or from the passkey itself (existing user) *)
+let get_otp_credential_binding_url passkey_binding_token =
+  let app_id = Database.get_env_value "BI_APP_ID" in
+  let tenant_id = Database.get_env_value "BI_TENANT_ID" in
+  let realm_id = Database.get_env_value "BI_REALM_ID" in
+  let headers = Header.of_list [("Content-Type", "application/json") ; ("Authorization", "Bearer " ^ passkey_binding_token)] in
+  Client.post ~headers (Uri.of_string ("https://auth-us.beyondidentity.com/v1/tenants/" ^ tenant_id ^ "/realms/" ^ realm_id ^ "/applications/" ^ app_id ^ "/credential-binding-jobs"))
+  >>= fun (resp, body) ->
+    let code = resp |> Response.status |> Code.code_of_status in 
+    let () = Dream.log "%i" code in
+    (* The resppnse body should be a credential binding link that the embedded SDK can use *)
+    body |> Cohttp_lwt.Body.to_string
+
 let exchange_token request =
     let code = match Dream.query request "code" with
                | Some auth_code -> auth_code 
@@ -60,7 +73,6 @@ let exchange_token request =
       | true ->
         let open Yojson.Basic.Util in
         let%lwt token_json = body |> Cohttp_lwt.Body.to_string in
-        let () = Dream.log "%s" token_json in
         let token_obj = Yojson.Basic.from_string token_json in
         let access_token = token_obj |> member "access_token" |> to_string in
         let id_token = token_obj |> member "id_token" |> to_string in

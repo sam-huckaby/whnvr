@@ -1,22 +1,12 @@
 window.byndid.initialized.then(async (embedded) => {
-  // Collect all the hidden treasures that OCaml sent in hidden fields
-  const tenant_id = document.getElementById("tenant_id").value;
-  const realm_id = document.getElementById("realm_id").value;
-  const app_id = document.getElementById("app_id").value;
-  const client_id = document.getElementById("client_id").value;
-  const redirect_uri = document.getElementById("redirect_uri").value;
+  // Grab the ID of the passkey selected by the user
   const passkey_id = document.getElementById("passkey_id").value;
   const state = document.getElementById("state").value;
 
-  const auth_url = `https://auth-us.beyondidentity.com/v1/tenants/${tenant_id}/realms/${realm_id}/applications/${app_id}/authorize?response_type=code&client_id=${client_id}&redirect_uri=${redirect_uri}&scope=openid&state=${state}`;
+  const auth_url = `https://auth-us.beyondidentity.com/v1/tenants/${window.config.tenantId}/realms/${window.config.realmId}/applications/${window.config.appId}/authorize?response_type=code&client_id=${window.config.clientId}&redirect_uri=${window.config.redirectURI}&scope=openid&state=${state}`;
 
   let response = await fetch(auth_url, {
     method: 'GET',
-    // TODO: Figure out why it fails CORS with Content-Type set
-    //headers: {
-    //  "Content-Type": "application/json",
-      // 'Content-Type': 'application/x-www-form-urlencoded',
-    //},
   });
   const { authenticate_url } = await response.json();
 

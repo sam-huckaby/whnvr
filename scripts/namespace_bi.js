@@ -11,3 +11,9 @@ window.byndid = {
 window.byndid.initialized.then((embedded) => {
   window.byndid.sdk = embedded;
 });
+
+fetch("/config", { method: "GET" }).then((resp) => {
+  resp.json().then((config) => {
+    window.config = config;
+  });
+});

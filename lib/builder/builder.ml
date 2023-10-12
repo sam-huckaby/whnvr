@@ -331,7 +331,6 @@ let login_dialog request =
   let err = match error with
             | Some err -> err
             | None -> "" in
-  let () = Dream.log "%s" err in
   div ~a:[
     a_class [
       "rounded" ;
@@ -358,7 +357,7 @@ let login_dialog request =
         a ~a:[a_href (Xml.uri_of_string "/hello") ; a_class ["underline hover:no-underline"]] [ txt "What is this place?" ]
       ] ;
       div ~a:[a_class ["w-full lg:w-1/2 my-4 flex flex-row justify-center items-center text-base"]] [
-        a ~a:[a_href (Xml.uri_of_string "/missing") ; a_class ["underline hover:no-underline"]] [ txt "I don't see my account" ] ;
+        a ~a:[a_href (Xml.uri_of_string "/extend") ; a_class ["underline hover:no-underline"]] [ txt "I don't see my account" ] ;
       ] ;
       div ~a:[a_class ["w-full lg:w-1/2 my-4 flex flex-row justify-center items-center text-base"]] [
         button ~a:[
@@ -383,6 +382,117 @@ let login_dialog request =
         a ~a:[a_href (Xml.uri_of_string "/login") ; a_class ["underline hover:no-underline"]] [ txt "Back to login" ]
       ] ;
     ] ;
+  ]
+
+let extend_dialog request =
+  div ~a:[
+    a_class [
+      "flex flex-col justify-center items-center" ;
+      "w-full h-full" ;
+      "p-8" ;
+    ] ;
+  ] [
+    h1 ~a:[a_class ["text-9xl lg:text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+    form ~a:[
+      a_class [
+        "flex flex-col justify-center items-center" ;
+        "w-full h-full" ;
+      ] ;
+      a_hx_typed Post ["/extend-passkey"] ;
+      a_hx_typed Swap ["innerHTML"] ;
+      a_name "extend_form" ;
+    ] [
+      p ~a:[a_class ["text-center text-base" ; "pt-2"]] [ txt "Extend your account to this device with a new passkey." ] ;
+      div ~a:[a_class ["p-4" ; "flex" ; "flex-col" ; "w-full"] ; a_id "enroll_form"] [
+        (Dream.csrf_tag request) |> Unsafe.data ;
+        input ~a:[
+          a_input_type `Text ;
+          a_required () ;
+          a_class (input_styles @ [
+            "mb-4 lg:mb-0"
+          ]) ;
+          a_name "email" ;
+          a_placeholder "email" ;
+        ] () ;
+      ] ;
+      div ~a:[a_class ["p-4 flex flex-row justify-around w-full lg:max-w-[300px]"] ; a_id "continue_button"] [
+        a ~a:[a_class button_styles ; a_href "/login"] [ txt "Back to login" ] ;
+        input ~a:[
+          a_input_type `Submit ;
+          a_class button_styles ;
+          a_value "Continue" ;
+          a_disabled () ;
+          a_hx_typed Hx_ [
+            "on keyup from closest <form/>" ;
+              "for elt in <*:required/>" ;
+                "if the elt's value.length is less than 5" ;
+                  "add @disabled then exit" ;
+                "end" ;
+              "end" ;
+            "remove @disabled"
+          ]
+        ] () ;
+      ] ;
+    ]
+  ]
+
+let extension_result_form request user_email =
+  form ~a:[
+    a_class [
+      "flex flex-col justify-center items-center" ;
+      "w-full h-full" ;
+      "p-8" ;
+    ] ;
+    a_id "otp_completion_form" ;
+    a_hx_typed Post ["/extend-complete"] ;
+    a_hx_typed Trigger ["completeOTP"] ; (* This form is no longer submitted via the submit *)
+    a_hx_typed Vals ["js:{passkeyBindingToken: event.detail.passkeyBindingToken}"] ;
+    a_hx_typed Swap ["innerHTML"] ;
+  ] [
+    p ~a:[a_class ["text-center text-base" ; "pt-2"]] [ txt "Please enter the One-time password that was emailed to you" ] ;
+    (Dream.csrf_tag request) |> Unsafe.data ;
+    input ~a:[
+      a_input_type `Hidden ;
+      a_name "email" ;
+      a_id "email" ;
+      a_value user_email ;
+    ] () ;
+    input ~a:[
+      a_input_type `Hidden ;
+      a_name "state" ;
+      a_id "state" ;
+      a_value (Dream.csrf_token request) ;
+    ] () ;
+    input ~a:[
+      a_input_type `Hidden ;
+      a_name "otp_url" ;
+      a_id "otp_url" ;
+      a_value "" ; (* This will store the URL that continues the OTP flow - it is not a secret *)
+    ] () ;
+    input ~a:[
+      a_input_type `Text ;
+      a_class (input_styles @ ["text-center" ; "text-2xl"]) ;
+      a_name "otp" ;
+      a_id "otp" ;
+      a_value "" ; (* This is where the user will put the OTP that was emailed to them *)
+    ] () ;
+    input ~a:[
+      a_input_type `Button ;
+      a_class button_styles ;
+      a_value "Verify" ;
+      a_id "verify_button" ;
+      a_disabled () ;
+      a_hx_typed Hx_ [
+        "on keyup from closest <form/>" ;
+          "for elt in <*:required/>" ;
+            "if the elt's value.length is less than 6" ; (* poor man's validation === basically no validation *)
+              "add @disabled then exit" ;
+            "end" ;
+          "end" ;
+        "remove @disabled"
+      ]
+    ] () ;
+    script ~a:[a_src (Xml.uri_of_string "/static/extend_account.dist.js")] (txt "") ;
   ]
 
 (** The enroll dialog needs to receive a new credential binding link that can

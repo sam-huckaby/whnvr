@@ -37,6 +37,7 @@ let actions = [
           match (Dream.session_field request "id") with
           | Some id ->
             begin
+              let () = Dream.log "%s" id in
               let%lwt _ = Dream.sql request  (Database.create_post message (Int64.of_string id)) in 
               let%lwt posts = Dream.sql request Database.fetch_posts in
               match posts with
@@ -63,6 +64,49 @@ let no_auth_routes = [
   Dream.get "/missing" (fun request ->
     let%lwt page = (Handler.generate_page Missing request) in
     Dream.html page
+  ) ;
+
+  Dream.get "/extend" (fun request ->
+    let%lwt page = (Handler.generate_page Extend request) in
+    Dream.html page
+  ) ;
+
+  (** Expose publicly available application IDs needed for various client auth transactions *)
+  Dream.get "/config" (fun _ ->
+    (** Create a JSON blob with the necessary public values *)
+    let client_id = Database.get_env_value "BI_APP_CLIENT_ID" in
+    let app_id = Database.get_env_value "BI_APP_ID" in 
+    let tenant_id = Database.get_env_value "BI_TENANT_ID" in
+    let realm_id = Database.get_env_value "BI_REALM_ID" in
+    let redirect_uri = Database.get_env_value "BI_AUTH_REDIRECT" in
+    Dream.json ("{\"clientId\":\"" ^ client_id ^ "\", \"appId\":\"" ^ app_id ^ "\", \"tenantId\":\"" ^ tenant_id ^ "\", \"realmId\":\"" ^ realm_id ^ "\", \"redirectURI\":\"" ^ redirect_uri ^ "\"}")
+  ) ;
+
+  (* I maybe don't need to invoke Auth here, I can probably just deliver another JS snippet that initiates the OTP flow *)
+  Dream.post "/extend-passkey" (fun request ->
+    match%lwt Dream.form request with
+    | `Ok form ->
+        (
+          let (_, email) = Utils.find_list_item form "email" in 
+          Dream.html (Builder.compile_elt (Builder.extension_result_form request email))
+        )
+    | _ -> Dream.response (Builder.error_page "Bad payload from the post form") |> Lwt.return
+  ) ;
+
+  (** This endpoint will receive a passkeyBindingToken which will be used to create a credential binding link without an identity ID *)
+  Dream.post "/extend-complete" (fun request ->
+    match%lwt Dream.form request with
+    | `Ok form ->
+        (
+          let (_, passkeyBindingToken) = Utils.find_list_item form "passkeyBindingToken" in 
+          let (_, email) = Utils.find_list_item form "email" in 
+
+          let%lwt binding_job_json = Auth.get_otp_credential_binding_url passkeyBindingToken in
+          let binding_url = Utils.get_json_key binding_job_json "credential_binding_link" in
+
+          Dream.html (Builder.compile_elt (Builder.enroll_dialog false email binding_url))
+        )
+    | _ -> Dream.response (Builder.error_page "Bad payload from the post form") |> Lwt.return
   ) ;
 
   Dream.get "/login" (fun request ->

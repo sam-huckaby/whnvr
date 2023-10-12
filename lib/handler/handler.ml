@@ -76,6 +76,13 @@ let login_page request =
       (Builder.centered_template (Builder.login_dialog request))
   ) |> Lwt.return
 
+let extend_page request =
+  Builder.compile_html (
+    Builder.html_wrapper 
+      "Extend My Account"
+      (Builder.centered_template (Builder.extend_dialog request))
+  ) |> Lwt.return
+
 (* The feed page is where the social messages will appear in this test of infinite loading *)
 let feed_page request =
   Builder.compile_html (
@@ -86,6 +93,7 @@ let feed_page request =
 
 (* The page types that are available, so that a non-existant page cannot be specified *)
 type page =
+  | Extend 
   | Feed
   | Hello
   | Login
@@ -94,6 +102,7 @@ type page =
 (* the main handler that lets the router ask for pages *)
 let generate_page page request =
   match page with
+  | Extend -> extend_page request
   | Hello -> hello_page request
   | Login -> login_page request
   | Feed -> feed_page request
