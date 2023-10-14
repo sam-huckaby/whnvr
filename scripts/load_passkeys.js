@@ -32,7 +32,6 @@ window.byndid.initialized.then(async (embedded) => {
 
   // Build the picklist of passkey tiles
   for( const passkey of passkeys ) {
-    console.log(passkey);
     // Create the displayable contents for a passkey
     const passkeyDisplayName = document.createElement("span");
     passkeyDisplayName.setAttribute("class", "text-xl");

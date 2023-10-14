@@ -11,8 +11,6 @@ let create_identity display_name username email =
   let headers = Header.of_list [("Content-Type", "application/json") ; ("Authorization", "Bearer " ^ api_token)] in
   Client.post ~headers ~body (Uri.of_string ("https://api-us.beyondidentity.com/v1/tenants/" ^ tenant_id ^ "/realms/" ^ realm_id ^ "/identities"))
   >>= fun (resp, body) -> 
-    (* Uncomment below to see what response comes back. When a malformed email is sent, BI returns 400 *)
-    (*let () = Dream.log "%i" (Code.code_of_status (Cohttp.Response.status resp)) in*)
     if Code.is_success (Code.code_of_status (Cohttp.Response.status resp)) then
       body |> Cohttp_lwt.Body.to_string 
       |> Lwt.map (fun res -> Some res)
@@ -42,9 +40,7 @@ let get_otp_credential_binding_url passkey_binding_token =
   let realm_id = Database.get_env_value "BI_REALM_ID" in
   let headers = Header.of_list [("Content-Type", "application/json") ; ("Authorization", "Bearer " ^ passkey_binding_token)] in
   Client.post ~headers (Uri.of_string ("https://auth-us.beyondidentity.com/v1/tenants/" ^ tenant_id ^ "/realms/" ^ realm_id ^ "/applications/" ^ app_id ^ "/credential-binding-jobs"))
-  >>= fun (resp, body) ->
-    let code = resp |> Response.status |> Code.code_of_status in 
-    let () = Dream.log "%i" code in
+  >>= fun (_, body) ->
     (* The resppnse body should be a credential binding link that the embedded SDK can use *)
     body |> Cohttp_lwt.Body.to_string
 

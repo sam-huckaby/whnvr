@@ -37,7 +37,6 @@ let actions = [
           match (Dream.session_field request "id") with
           | Some id ->
             begin
-              let () = Dream.log "%s" id in
               let%lwt _ = Dream.sql request  (Database.create_post message (Int64.of_string id)) in 
               let%lwt posts = Dream.sql request Database.fetch_posts in
               match posts with
@@ -139,7 +138,7 @@ let no_auth_routes = [
           | Some (id, username) ->
             begin
               (* Create an identity in Beyond Identity's System *)
-              let%lwt identity_json = Auth.create_identity username username email in
+              let%lwt identity_json = Auth.create_identity (String.lowercase_ascii username) (String.lowercase_ascii email) (String.lowercase_ascii email) in
               match identity_json with
               | Some json ->
                   begin
@@ -220,7 +219,7 @@ let no_auth_routes = [
           let (_, email) = Utils.find_list_item form "email" in 
 
           (* Create an identity in Beyond Identity's System *)
-          let%lwt identity_json = Auth.create_identity username username email in
+          let%lwt identity_json = Auth.create_identity (String.lowercase_ascii username) (String.lowercase_ascii email) (String.lowercase_ascii email) in
           match identity_json with
           | Some json ->
               begin
