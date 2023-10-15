@@ -46,6 +46,8 @@ let actions = [
   )
 ]
 
+let find_list_item l item = List.find (fun (key, _) -> key = item) l
+
 (** The routes below are not protected by the auth middleware *)
 let no_auth_routes = [
   Dream.get "/hello" (fun request ->
@@ -84,14 +86,16 @@ let no_auth_routes = [
   (** This endpoint will receive a passkeyBindingToken which will be used to create a credential binding link without an identity ID *)
   Dream.post "/extend-complete" (fun request ->
     match%lwt Dream.form request with
-    | `Ok ["passkeyBindingToken", passkeyBindingToken ; "email", email] ->
+    | `Ok form ->
         (
+          let (_, passkeyBindingToken) = find_list_item form "passkeyBindingToken" in 
+          let (_, email) = find_list_item form "email" in
           let%lwt binding_job_json = Auth.get_otp_credential_binding_url passkeyBindingToken in
           let binding_url = Utils.get_json_key binding_job_json "credential_binding_link" in
 
           Dream.html (Builder.compile_elt (Builder.enroll_dialog false email binding_url))
         )
-    | _ -> Dream.response (Builder.error_page "Bad payload from the post form") |> Lwt.return
+    | _ -> Dream.response (Builder.error_page "Bad payload from the OTP form") |> Lwt.return
   ) ;
 
   Dream.get "/login" (fun request ->
@@ -113,8 +117,11 @@ let no_auth_routes = [
 
   Dream.post "/passkey-upgrade" (fun request ->
     match%lwt Dream.form request with
-    | `Ok ["username", username ; "password", secret ; "email" , email] ->
+    | `Ok form ->
         begin
+          let (_, username) = find_list_item form "username" in 
+          let (_, secret) = find_list_item form "password" in 
+          let (_, email) = find_list_item form "email" in
           (* Validate the old username/password combination before migrating to a passkey *)
           let%lwt found_user = Dream.sql request (Database.authenticate username secret) in
           match found_user with
@@ -196,7 +203,9 @@ let no_auth_routes = [
   Dream.post "/enroll" (fun request ->
     (* Receive user info from form on login *)
     match%lwt Dream.form request with
-    | `Ok ["username", username ; "email", email] -> (
+    | `Ok form -> (
+          let (_, username) = find_list_item form "username" in 
+          let (_, email) = find_list_item form "email" in 
           (* Create an identity in Beyond Identity's System *)
           let%lwt identity_json = Auth.create_identity (String.lowercase_ascii username) (String.lowercase_ascii email) (String.lowercase_ascii email) in
           match identity_json with
