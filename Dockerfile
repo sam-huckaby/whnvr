@@ -6,7 +6,7 @@ RUN set -x && \
     : "Update and upgrade default package" && \
     sudo apt update && sudo apt -y upgrade && \
     #sudo apt install ca-certificates && sudo update-ca-certificates -f && \
-    sudo apt -y install postgresql libev-dev libgmp-dev pkg-config libssl-dev zlib1g-dev libpq-dev libpcre3-dev openssl
+    sudo apt -y install postgresql libev-dev libgmp-dev pkg-config libssl-dev zlib1g-dev libpq-dev libpcre3-dev openssl nodejs
 
 # --- #
 
@@ -19,6 +19,7 @@ RUN set -x && \
     : "Build applications" && \
     dune build && \
     sudo cp ./_build/default/bin/main.exe /usr/bin/main.exe && \
+    sudo node esbuild.build.mjs && \
     sudo cp -R ./www /usr/bin/www
 
 # --- #

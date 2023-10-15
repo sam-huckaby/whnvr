@@ -1,1 +1,0 @@
-(()=>{window.byndid.initialized.then(async i=>{let n=htmx.values(htmx.find("#binding_url")).binding_url;i.isBindPasskeyUrl(n)&&(await i.bindPasskey(n),htmx.remove(htmx.find("#bind_passkey_loader")),htmx.removeClass(htmx.find("#bind_passkey_continue"),"hidden"))});})();

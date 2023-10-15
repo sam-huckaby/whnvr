@@ -1,6 +1,9 @@
 # Obviously, don't commit build artifacts
 _build
 
+# Don't keep bundled JS files in the repo, since they change
+www/styles/*.dist.js
+
 # Don't commit the tailwind executable
 tailwindcss
 
