@@ -197,6 +197,74 @@ let error_page message =
     ])
   )
 
+let post_form request =
+  div ~a:[
+    a_class ["py-4 px-4 lg:px-0" ; "w-full" ; "lg:max-w-[700px]"] ;
+    a_id "post_submit_form" ;
+    a_hx_typed Get ["/postForm"] ;
+    a_hx_typed Trigger ["invalidCSRF_reloadForm"] ;
+    a_hx_typed Swap ["outerHTML"] ;
+  ] [
+    form ~a:[
+        a_hx_typed Post [Xml.uri_of_string "/posts"] ;
+        a_hx_typed Target ["#posts_container"] ;
+        a_hx_typed Swap ["innerHTML"] ;
+        a_hx_typed Hx_ ["on htmx:afterRequest reset() me"]
+    ] [
+      (Dream.csrf_tag request) |> Unsafe.data ;
+      textarea ~a:[
+        a_class [
+          "w-full h-[100px]" ;
+          "bg-whnvr-300 dark:bg-whnvr-700" ;
+          "border-whnvr-600 dark:border-whnvr-400" ;
+          "p-2" ;
+        ] ;
+        a_name "message" ;
+        a_id "post_message_input" ;
+        a_required () ;
+        a_placeholder "The void is listening, what will you say?" ;
+        a_maxlength 420 ;
+      ] (txt "") ;
+      input ~a:[
+        a_class (button_styles @ ["w-full" ; "mt-4 lg:mt-0" ; "py-2" ; "hover:bg-whnvr-300" ; "disabled:hover:bg-whnvr-800 disabled:hover:cursor-not-allowed"]) ;
+        a_input_type `Submit ;
+        a_disabled () ;
+        a_hx_typed Hx_ [
+          "on keyup from closest <form/>" ;
+            "for elt in <*:required/>" ;
+              "if the elt's value.length is less than 1" ;
+                "add @disabled then exit" ;
+              "end" ;
+            "end" ;
+          "remove @disabled"
+        ] ;
+        a_value "Post" ;
+      ] ()
+    ] ;
+    script ~a:[a_src (Xml.uri_of_string "/static/feed_handlers.dist.js")] (txt "") ;
+  ]
+
+let rebuild_posts request message =
+  match (Dream.session_field request "id") with
+  | Some id ->
+    begin
+      let%lwt _ = Dream.sql request (Database.create_post message (Int64.of_string id)) in 
+      let%lwt posts = Dream.sql request Database.fetch_posts in
+      match posts with
+      | Ok (posts) -> Dream.html (compile_elt_list (list_posts posts))
+      | Error (err) -> Dream.response (error_page (Caqti_error.show err)) |> Lwt.return 
+    end
+  | None -> Dream.response (error_page "No user id in the session") |> Lwt.return
+
+(** When a post with an invalid CSRF is received, send it back and ask htmx to retry the request *)
+let retry_posts request message =
+  let retry_header = Yojson.Safe.to_string @@ (`Assoc [ "retryPostBadCSRF", `String message ]) in
+  let%lwt posts = Dream.sql request Database.fetch_posts in
+  match posts with
+  | Ok (posts) -> Dream.html ~headers:[("HX-Trigger-After-Settle", retry_header)] (compile_elt_list (list_posts posts))
+  | Error (err) -> Dream.response (error_page (Caqti_error.show err)) |> Lwt.return 
+
+
 let passkey_list rm = 
   let loader = match rm with
     | true -> script ~a:[a_src (Xml.uri_of_string "/static/list_passkeys_to_delete.dist.js")] (txt "")
@@ -392,7 +460,6 @@ let extend_dialog request =
       "p-8" ;
     ] ;
   ] [
-    h1 ~a:[a_class ["text-9xl lg:text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
     form ~a:[
       a_class [
         "flex flex-col justify-center items-center" ;
@@ -402,6 +469,7 @@ let extend_dialog request =
       a_hx_typed Swap ["innerHTML"] ;
       a_name "extend_form" ;
     ] [
+      h1 ~a:[a_class ["mt-4 text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
       p ~a:[a_class ["text-center text-base" ; "pt-2"]] [ txt "Extend your account to this device with a new passkey." ] ;
       div ~a:[a_class ["p-4" ; "flex" ; "flex-col" ; "w-full"] ; a_id "enroll_form"] [
         (Dream.csrf_tag request) |> Unsafe.data ;
@@ -441,7 +509,6 @@ let extension_result_form request user_email =
     a_class [
       "flex flex-col justify-center items-center" ;
       "w-full h-full" ;
-      "p-8" ;
     ] ;
     a_id "otp_completion_form" ;
     a_hx_typed Post ["/extend-complete"] ;
@@ -449,7 +516,8 @@ let extension_result_form request user_email =
     a_hx_typed Vals ["js:{passkeyBindingToken: event.detail.passkeyBindingToken}"] ;
     a_hx_typed Swap ["innerHTML"] ;
   ] [
-    p ~a:[a_class ["text-center text-base" ; "pt-2"]] [ txt "Please enter the One-time password that was emailed to you" ] ;
+    h1 ~a:[a_class ["mt-4 text-4xl text-black dark:text-white"]] [txt "WHNVR"] ;
+    p ~a:[a_class ["text-center text-base" ; "mb-2"]] [ txt "Please enter the One-time password that was emailed to you" ] ;
     (Dream.csrf_tag request) |> Unsafe.data ;
     input ~a:[
       a_input_type `Hidden ;
@@ -471,14 +539,14 @@ let extension_result_form request user_email =
     ] () ;
     input ~a:[
       a_input_type `Text ;
-      a_class (input_styles @ ["text-center" ; "text-2xl"]) ;
+      a_class @@ input_styles @ ["text-center" ; "text-2xl" ; "m-2"] ;
       a_name "otp" ;
       a_id "otp" ;
       a_value "" ; (* This is where the user will put the OTP that was emailed to them *)
     ] () ;
     input ~a:[
       a_input_type `Button ;
-      a_class button_styles ;
+      a_class @@ button_styles @ ["mt-2"] ;
       a_value "Verify" ;
       a_id "verify_button" ;
       a_disabled () ;

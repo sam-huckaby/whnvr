@@ -1,4 +1,5 @@
 (library
   (name builder)
   (public_name whnvr.builder)
-  (libraries dream database tyxml))
+  (libraries dream database tyxml)
+  (preprocess (pps lwt_ppx)))

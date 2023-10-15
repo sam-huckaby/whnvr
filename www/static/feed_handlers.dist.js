@@ -1,0 +1,1 @@
+(()=>{var t=e=>{let o=e.detail.value;htmx.trigger("#post_submit_form","invalidCSRF_reloadForm"),htmx.on("#post_submit_form","htmx:afterSettle",()=>{document.getElementById("post_message_input").value=o}),console.log(e.detail.value)};document.body.removeEventListener("retryPostBadCSRF",t);document.body.addEventListener("retryPostBadCSRF",t);})();

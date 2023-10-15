@@ -1,8 +1,5 @@
 (** The below functions need to be moved to a helper module *)
 
-(* This is a simple list item finder. I need to either inline this or decide why not to. *)
-let find_list_item l item = List.find (fun (key, _) -> key = item) l
-
 let _ = Random.self_init ()
 
 (** Generate a stupid, ugly, confusing, password until I sit down and write an OCaml passkey library *)

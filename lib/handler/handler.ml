@@ -2,43 +2,7 @@ open Tyxml.Html
 
 let feed_page_template request =
   div ~a:[a_class ["flex flex-col" ; "w-full" ; "items-center"]] [
-    div ~a:[a_class ["py-4 px-4 lg:px-0" ; "w-full" ; "lg:max-w-[700px]"]] [
-      form ~a:[
-          Builder.a_hx_typed Post [Xml.uri_of_string "/posts"] ;
-          Builder.a_hx_typed Target ["#posts_container"] ;
-          Builder.a_hx_typed Swap ["innerHTML"] ;
-          Builder.a_hx_typed Hx_ ["on htmx:afterRequest reset() me"]
-      ] [
-        (Dream.csrf_tag request) |> Unsafe.data ;
-        textarea ~a:[
-          a_class [
-            "w-full h-[100px]" ;
-            "bg-whnvr-300 dark:bg-whnvr-700" ;
-            "border-whnvr-600 dark:border-whnvr-400" ;
-            "p-2" ;
-          ] ;
-          a_name "message" ;
-          a_required () ;
-          a_placeholder "The void is listening, what will you say?" ;
-          a_maxlength 420 ;
-        ] (txt "") ;
-        input ~a:[
-          a_class (Builder.button_styles @ ["w-full" ; "mt-4 lg:mt-0" ; "py-2" ; "hover:bg-whnvr-300" ; "disabled:hover:bg-whnvr-800 disabled:hover:cursor-not-allowed"]) ;
-          a_input_type `Submit ;
-          a_disabled () ;
-          Builder.a_hx_typed Builder.Hx_ [
-            "on keyup from closest <form/>" ;
-              "for elt in <*:required/>" ;
-                "if the elt's value.length is less than 1" ;
-                  "add @disabled then exit" ;
-                "end" ;
-              "end" ;
-            "remove @disabled"
-          ] ;
-          a_value "Post" ;
-        ] ()
-      ] ;
-    ] ;
+    Builder.post_form request ;
     div ~a:[
       a_id "feed_container" ;
       a_class ["py-4 px-4 lg:px-0" ; "w-full" ; "lg:max-w-[700px]"] ;

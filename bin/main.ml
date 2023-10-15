@@ -19,6 +19,10 @@ let fragments = [
     | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return
   ) ;
 
+  Dream.get "/postForm" (fun request ->
+    Dream.html (Builder.compile_elt (Builder.post_form request))
+  ) ;
+
   Dream.get "/menu-close" (fun request ->
     Dream.html (Builder.compile_elt (Builder.standard_menu request false))
   ) ;
@@ -31,20 +35,9 @@ let fragments = [
 let actions = [
   Dream.post "/posts" (fun request ->
     match%lwt Dream.form request with
-    | `Ok form ->
-        begin
-          let (_, message) = Utils.find_list_item form "message" in 
-          match (Dream.session_field request "id") with
-          | Some id ->
-            begin
-              let%lwt _ = Dream.sql request  (Database.create_post message (Int64.of_string id)) in 
-              let%lwt posts = Dream.sql request Database.fetch_posts in
-              match posts with
-              | Ok (posts) -> Dream.html (Builder.compile_elt_list (Builder.list_posts posts))
-              | Error (err) -> Dream.response (Builder.error_page (Caqti_error.show err)) |> Lwt.return 
-            end
-          | None -> Dream.response (Builder.error_page "No user id in the session") |> Lwt.return
-        end
+    | `Ok ["message", message] -> Builder.rebuild_posts request message 
+    (*| `Expired (["message", message], _) -> Builder.retry_posts request message
+    | `Invalid_token ["message", message] -> Builder.retry_posts request message*)
     | _ -> Dream.response (Builder.error_page "Bad payload from the post form") |> Lwt.return
   ) ;
   Dream.post "/logout" (fun request ->
@@ -84,22 +77,15 @@ let no_auth_routes = [
   (* I maybe don't need to invoke Auth here, I can probably just deliver another JS snippet that initiates the OTP flow *)
   Dream.post "/extend-passkey" (fun request ->
     match%lwt Dream.form request with
-    | `Ok form ->
-        (
-          let (_, email) = Utils.find_list_item form "email" in 
-          Dream.html (Builder.compile_elt (Builder.extension_result_form request email))
-        )
+    | `Ok ["email", email] -> Dream.html (Builder.compile_elt (Builder.extension_result_form request email))
     | _ -> Dream.response (Builder.error_page "Bad payload from the post form") |> Lwt.return
   ) ;
 
   (** This endpoint will receive a passkeyBindingToken which will be used to create a credential binding link without an identity ID *)
   Dream.post "/extend-complete" (fun request ->
     match%lwt Dream.form request with
-    | `Ok form ->
+    | `Ok ["passkeyBindingToken", passkeyBindingToken ; "email", email] ->
         (
-          let (_, passkeyBindingToken) = Utils.find_list_item form "passkeyBindingToken" in 
-          let (_, email) = Utils.find_list_item form "email" in 
-
           let%lwt binding_job_json = Auth.get_otp_credential_binding_url passkeyBindingToken in
           let binding_url = Utils.get_json_key binding_job_json "credential_binding_link" in
 
@@ -127,11 +113,8 @@ let no_auth_routes = [
 
   Dream.post "/passkey-upgrade" (fun request ->
     match%lwt Dream.form request with
-    | `Ok form ->
+    | `Ok ["username", username ; "password", secret ; "email" , email] ->
         begin
-          let (_, username) = Utils.find_list_item form "username" in 
-          let (_, secret) = Utils.find_list_item form "password" in 
-          let (_, email) = Utils.find_list_item form "email" in 
           (* Validate the old username/password combination before migrating to a passkey *)
           let%lwt found_user = Dream.sql request (Database.authenticate username secret) in
           match found_user with
@@ -213,11 +196,7 @@ let no_auth_routes = [
   Dream.post "/enroll" (fun request ->
     (* Receive user info from form on login *)
     match%lwt Dream.form request with
-    | `Ok form -> (
-          (* Retrieve form data using my jank Util *)
-          let (_, username) = Utils.find_list_item form "username" in 
-          let (_, email) = Utils.find_list_item form "email" in 
-
+    | `Ok ["username", username ; "email", email] -> (
           (* Create an identity in Beyond Identity's System *)
           let%lwt identity_json = Auth.create_identity (String.lowercase_ascii username) (String.lowercase_ascii email) (String.lowercase_ascii email) in
           match identity_json with
