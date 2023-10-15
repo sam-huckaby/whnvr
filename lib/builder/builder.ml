@@ -241,7 +241,7 @@ let post_form request =
         a_value "Post" ;
       ] ()
     ] ;
-    script ~a:[a_src (Xml.uri_of_string "/static/feed_handlers.dist.js")] (txt "") ;
+    (*script ~a:[a_src (Xml.uri_of_string "/static/feed_handlers.dist.js")] (txt "") ;*)
   ]
 
 let rebuild_posts request message =
