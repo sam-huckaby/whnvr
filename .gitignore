@@ -2,7 +2,8 @@
 _build
 
 # Don't keep bundled JS files in the repo, since they change
-www/styles/*.dist.js
+www/static/*.dist.js
+www/static/build.css
 
 # Don't commit the tailwind executable
 tailwindcss
