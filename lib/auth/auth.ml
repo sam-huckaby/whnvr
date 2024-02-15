@@ -15,6 +15,7 @@ let create_identity display_name username email =
       body |> Cohttp_lwt.Body.to_string 
       |> Lwt.map (fun res -> Some res)
     else
+      let () = Dream.log "Status code %i returned by Beyond Identity API" (Code.code_of_status (Cohttp.Response.status resp)) in
       (* Drain the body to prevent leakage - everyone hates leakage *)
       body |> Cohttp_lwt.Body.drain_body
       >|= fun _ -> None
